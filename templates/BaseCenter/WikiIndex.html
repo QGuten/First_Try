@@ -1,0 +1,78 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">研发文档</a>
+                      <a><cite>文档管理</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card" id="docs_list">
+                <div class="layui-card-header">
+                    <button class="layui-btn layui-btn-normal" type="button" data-method="create_docs" style="margin-top: 10px">新建文档
+                                </button>
+                </div>
+                <div class="layui-card-body">
+
+                    <table class="layui-table" lay-filter="docs_table">
+                        <thead>
+                        <tr>
+                            <td>文章ID</td>
+                            <td>文章标题</td>
+                            <td>创建人</td>
+                            <td>编辑人</td>
+                            <td>更新时间</td>
+                            <td>操作</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if docs %}
+                            {% for info in docs %}
+                                <tr>
+                                    <td>{{ info.id }}</td>
+                                    <td>{{ info.title }}</td>
+                                    <td>{{ info.created_by }}</td>
+                                    <td>{{ info.updated_by }}</td>
+                                    <td>{{ info.updated_at }}</td>
+                                    <td><button class="layui-btn layui-btn-sm layui-btn-checked" onclick="OpenInfo({{ info.id }})">查看详情</button></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                            <td colspan="6">您还没有添加文档！</td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+        <script>
+        layui.use(['layer', 'form', 'table'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form;
+            //触发事件
+            var active = {
+                create_docs: function () {
+                    window.location.href = '/BaseCenter/CreateWikiDocs/'
+                },
+            };
+
+            $('#docs_list .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+        });
+        function OpenInfo(id) {
+            window.location.href = '{% url "BaseCenter:WikiDocsInfo" %}' + '?id=' + id
+        }
+    </script>
+{% endblock %}

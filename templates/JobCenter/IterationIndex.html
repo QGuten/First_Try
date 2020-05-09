@@ -1,0 +1,316 @@
+{% extends 'layout/base.html' %}
+{% block css %}
+    <style>
+        .layui-layer-content {
+            text-align: center;
+            margin: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">任务库</a>
+                      <a><cite>迭代管理</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body" id="config_list">
+                    <form class="layui-form" id="exe_case">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <button class="layui-btn layui-btn-normal" type="button" data-method="info_set">创建迭代
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <select name="case_search_type" class="layui-form-select" lay-filter="pro_list"
+                                        id="pro_list">
+                                    <option value="">请选择所属项目</option>
+                                    {% for pro in pro_list %}
+                                        <option value="{{ pro.id }}">{{ pro.project_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="layui-inline">
+                                <select name="case_search_type" class="layui-form-select"
+                                        lay-filter="case_search_type"
+                                        id="case_search_type">
+                                    <option value="">请选择搜索条件</option>
+                                    <option value="id">迭代ID</option>
+                                    <option value="name__contains">迭代名称</option>
+                                    {#                                    <option value="pro">模块名称</option>#}
+                                    {#                                    <option value="case_type">用例类型</option>#}
+                                </select>
+                            </div>
+                            <div class="layui-inline">
+                                <input class="layui-input" name="search_data" id="search_data"
+                                       autocomplete="off">
+                            </div>
+                            <div class="layui-inline">
+                                <button class="layui-btn" type="button" data-type="reload"
+                                        data-method="search_case">搜索
+                                </button>
+                            </div>
+                            <div class="layui-inline">
+                                <input type="checkbox" name="show[all]" title="展示全部" lay-filter="show_data">
+                            </div>
+                        </div>
+{#                        <div class="layui-form-item">#}
+{#                            <div class="layui-input-inline">#}
+{#                                <input type="checkbox" name="show[all]" title="展示全部" lay-filter="show_data">#}
+{#                            </div>#}
+{#                        </div>#}
+                    </form>
+                    <script type="text/html" id="bar">
+                        <a class="layui-btn layui-btn-checked layui-btn-xs" lay-event="exe">直接执行</a>
+                        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">查看详情</a>
+                    </script>
+                    <table class="layui-hide" id="it_table" lay-filter="it_table"></table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        layui.use(['layer', 'form', 'table'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form;
+            //触发事件
+            var active = {
+                info_set: function () {
+                    window.location.href = '{% url "JobCenter:CreateIterationIndex" %}'
+                },
+                search_case: function () {
+                    var project_id = $("#pro_list  option:selected").attr("value");
+                    var search_data = $("#search_data").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (search_data == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (search_data != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = search_data;
+                    re_data["pro_id"] = project_id;
+                    re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+                    re_data['abandon_flag'] = 1;
+                    table.reload('it_table', {
+                        url: '/jobcenter/api/iterations/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                    })
+                },
+            };
+
+            $('#config_list .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(it_table)', function (obj) {
+                if (obj.event === 'info') {
+                    window.location.href = '{% url "JobCenter:IterationInfo" %}' + '?id=' + obj.data.id;
+                } else if (obj.event === 'exe') {
+                    layer.open({
+                        title: '温馨提示'
+                        , content: '确定是否执行'
+                        , btn: ['是']
+                        , yes: function (index) {
+                            layer.close(index);
+                            $.ajax({
+                                url: '{% url "JobCenter:ExeIterations" %}',
+                                data: JSON.stringify({it_id: obj.data.id}),
+                                //cache: false,
+                                //async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                },
+                                error: function (result) {
+                                },
+                            })
+                        }
+                    });
+                    //layer.msg("正在开发中，敬请期待……")
+                }
+            });
+
+            //var re_data = {};
+            //re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+            //re_data['abandon_flag'] = 1;
+
+            var table_cache;
+
+            table.render({
+                elem: '#it_table'
+                , url: '/jobcenter/api/iterations/'
+                , title: '测试用例数据表'
+                , id: 'it_table'
+                , toolbar: true
+                //, toolbar: '#toolbar'
+                , where: {
+                    search_data: JSON.stringify({
+                        pro__id__in: $("#auto_pro_list").attr('value'),
+                        abandon_flag: 1
+                    })
+                }
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'name', title: '迭代名称'}
+                    //, {field: 'state', title: '迭代状态', width: 100}
+                    , {field: 'pro_name', title: '所属项目', width: 100}
+                    , {field: 'version_name', title: '所属版本', width: 100}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 120, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                            }
+                        }
+                    }
+                    , {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 140}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    table_cache = res.results;
+                }
+            });
+
+            form.on('checkbox(show_data)', function (data) {
+                //console.log(data.elem); //得到checkbox原始DOM对象
+                //console.log(data.elem.checked); //是否被选中，true或者false
+                //console.log(data.value); //复选框value值，也可以通过data.elem.value得到
+                //console.log(data.othis); //得到美化后的DOM对象
+
+                var re_data = {};
+                re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+                if (data.elem.checked) {
+                    re_data['abandon_flag'] = 0;
+                } else {
+                    re_data['abandon_flag'] = 1;
+                }
+                //console.log(re_data);
+                table.reload('it_table', {
+                    url: '/jobcenter/api/iterations/',
+                    page: {
+                        curr: 1
+                    }
+                    , where: {
+                        search_data: JSON.stringify(re_data)
+                    }
+                })
+            });
+
+            form.on('switch(Enable)', function (data) {
+                layer.open(
+                    {
+                        type: 1,
+                        content: '是否确认更新数据状态，&#10;这可能导致该数据在列表中不显示。',
+                        btn: ['确定', '取消'],
+                        shadeClose: false,
+                        title: '更新结果',
+                        yes: function (index) {
+                            //do something
+                            layer.close(index);
+                            var elem = data.othis.parents('tr');
+                            var dataindex = elem.attr("data-index");
+                            var data_id;
+                            var abandon_flag;
+                            //console.log(dataindex);
+                            if (elem.find("input:checkbox").is(':checked')) {
+                                abandon_flag = 1;
+                                //console.log('启用');
+                            } else {
+                                abandon_flag = 0;
+                                //console.log('禁用');
+                            }
+                            $.each(table_cache, function (index, value) {
+                                if (value.LAY_TABLE_INDEX == dataindex) {
+                                    data_id = value.id
+                                }
+                            });
+                            var load_index = layer.load();
+                            $.ajax({
+                                url: '{% url "JobCenter:IterationApi" %}',
+                                data: JSON.stringify({
+                                    data_id: data_id,
+                                    abandon_flag: abandon_flag,
+                                }),
+                                cache: false,
+                                async: false,
+                                type: "PUT",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON
+                                    });
+                                },
+                            })
+                        },
+                        btn2: function (index) {
+                            layer.close(index);
+                            table.reload('it_table')
+                        }
+                    });
+            });
+        });
+
+    </script>
+{% endblock %}

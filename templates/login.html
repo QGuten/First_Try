@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>{{ title }}</title>
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no'
+          name='viewport'/>
+    <!-- CSS Files -->
+    <link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet"/>
+    <link href="{% static 'assets/css/now-ui-kit.css' %}" rel="stylesheet"/>
+    <link REL="SHORTCUT ICON" HREF="{% static "images/favicon.ico" %}"/>
+    <script src="{% static 'jquery-3.2.1.min.js' %}"></script>
+
+</head>
+
+<body class="login-page sidebar-collapse">
+
+<div class="page-header" filter-color="orange">
+    <div class="page-header-image" style="background-image:url({% static 'images/login-bg.jpg' %})"></div>
+    <div class="container">
+        <div class="col-md-4 content-center">
+            <div class="card card-login card-plain">
+                {#                <form class="form" action="{% url 'UserCenter:SingIn' %}" METHOD="post">#}
+                <form class="form" id="SignIn">
+                    <div class="header header-primary text-center">
+                        <div class="logo-container">
+                            <img src="{% static 'images/logoa.png' %}" alt="">
+                        </div>
+                    </div>
+                    <div class="content">
+                        <div class="input-group form-group-no-border input-lg">
+                                <span class="input-group-addon">
+                                    <i class="now-ui-icons users_circle-08"></i>
+                                </span>
+                            <input type="text" name="info" class="form-control" lay-verify="required"
+                                   placeholder="User Name...">
+                        </div>
+                        <div class="input-group form-group-no-border input-lg">
+                                <span class="input-group-addon">
+                                    <i class="now-ui-icons text_caps-small"></i>
+                                </span>
+                            <input type="password" name="pwd" placeholder="Password..." lay-verify="required"
+                                   class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="footer text-center">
+                        <div id="error_msg" class="layui-form-mid" style="color: red;"></div>
+                        <button type="button" class="btn btn-primary btn-round btn-lg btn-block" onclick="submitInfo()">
+                            登录
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+
+    function submitInfo() {
+        var info = $("#SignIn").serialize();
+        //console.log(info);
+        $.ajax({
+            url: '{% url "UserCenter:SingIn" %}',
+            data: info,
+            //data: JSON.stringify(info),
+            cache: false,
+            async: false,
+            type: "POST",
+            dataType: "json",
+            success: function (result) {
+                if (result.code == 200) {
+                    console.log('登录成功');
+                    window.location.href = "{% url 'BaseCenter:WorkbenchIndex' %}";
+                } else {
+                    $("#error_msg")[0].innerHTML = result.responseJSON;
+                }
+            },
+            error: function (result) {
+                console.log(result);
+                if(result){
+                    $("#error_msg")[0].innerHTML = result.responseJSON;
+                }else {
+                    $("#error_msg")[0].innerHTML = "系统异常，请稍后再试试！";
+                }
+            },
+        });
+    }
+
+</script>

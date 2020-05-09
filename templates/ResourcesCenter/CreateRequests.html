@@ -1,0 +1,593 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}
+    <style>
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">资源库</a>
+                        <a href="{% url 'ResourceCenter:RequestsIndex' %}">接口管理</a>
+                      <a><cite>新增接口</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <form class="layui-form" id="fromInfo" action="#">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <div class="layui-elem-quote">
+                            <p>填写接口信息</p>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">接口名称</label>
+                            <div class="layui-input-inline" style="width: 500px;">
+                                <input type="text" id="re_name" name="re_name" autocomplete="off" class="layui-input" value="{{ re_data.re_name }}">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">开发者</label>
+                            <div class="layui-input-inline">
+                                <input type="text" id="re_dev" name="re_dev" autocomplete="off" class="layui-input" value="{{ re_data.developer }}">
+                            </div>
+                            <label class="layui-form-label">接口版本</label>
+                            <div class="layui-input-inline">
+                                <input type="text" id="edition" name="edition" autocomplete="off" class="layui-input" value="{{ re_data.edition }}">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">所属项目</label>
+                            <div class="layui-input-inline">
+                                <select lay-verify="content" lay-filter="pro_list">
+                                    <option value=""></option>
+                                    {% for pro in pro_list %}
+                                        <option value="{{ pro.id }}">{{ pro.project_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label class="layui-form-label">所属模块</label>
+                            <div class="layui-input-inline">
+                                <select id="pro_module" name="pro_module" lay-filter="no">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">请求方式</label>
+                            <div class="layui-input-inline">
+                                <select lay-verify="content" lay-filter="method_list" name="re_method" id="re_method">
+                                    <option value=""></option>
+                                    {% for method in method_list %}
+                                        <option value="{{ method.id }}">{{ method.param_value }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">请求地址</label>
+                            <div class="layui-input-inline" style="width: 500px;">
+                                <input type="text" id="re_path" name="re_path" autocomplete="off" class="layui-input" value="{{ re_data.re_path }}">
+                            </div>
+                            <div class="layui-form-mid layui-word-aux">示例：service/v1/external/detail</div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">接口描述</label>
+                            <div class="layui-input-inline" style="width: 500px;">
+                                <input type="text" id="re_des" name="re_des" autocomplete="off" class="layui-input" value="{{ re_data.description }}">
+                            </div>
+                        </div>
+
+                        <div id="check_case" style="display: none;">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">测试用例</label>
+                                <div class="layui-input-block">
+                                    <input type="radio" name="case_type" value="0" title="不生成测试用例" checked="checked"
+                                           lay-filter="case_type">
+                                    <input type="radio" name="case_type" value="1" title="生成测试用例"
+                                           lay-filter="case_type">
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="display: none" id="case_type_list">
+                                <label class="layui-form-label">生成规则</label>
+                                {% if case_type_list %}
+                                    <div class="layui-input-block">
+                                        {% for info in case_type_list %}
+                                            <input type="checkbox" name="params" title="{{ info.param_name }}"
+                                                   placeholder="{{ info.param_value }}">
+                                            <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                                <span>{{ info.param_name }}</span><i
+                                                    class="layui-icon layui-icon-ok"></i></div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body" id="response_params">
+                        <div class="layui-elem-quote">
+                            <p>填写请求参数</p>
+                        </div>
+                        <div class="layui-container" style="margin: 5px">
+                            <div class="layui-row">
+                                <div class="layui-col-md2" style="margin-top: 5px;">
+                                    <label>是否有请求参数</label>
+                                </div>
+                                <div class="layui-col-md3">
+                                    <input id="if_have" type="checkbox" lay-skin="switch" lay-text="是|否"
+                                           lay-filter="if_have">
+                                </div>
+                            </div>
+                        </div>
+
+                        <script type="text/html" id="selectTool">
+                            <select class="layui-form-select" lay-filter="selectDemo" lay-search>
+                                <option value="">请选择字段类型</option>
+                                {% for type in params_list %}
+                                    <option value="{{ type.param_value }}">{{ type.param_value }}</option>
+                                {% endfor %}
+                            </select>
+                        </script>
+
+                        <script type="text/html" id="checkboxTool">
+                            <input type="checkbox" lay-skin="switch" lay-text="是|否" lay-filter="checkboxMust"
+                                   checked>
+                        </script>
+
+                        <script type="text/html" id="bar">
+                            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                            <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="add">添加行</a>
+                        </script>
+
+                        <table id="demo" lay-filter="tableFilter" style="display: block"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body" id="response_params">
+                        <div class="layui-elem-quote">
+                            <p>填写响应参数</p>
+                        </div>
+                        <script type="text/html" id="responseTypeTool">
+                            <select lay-filter="responseType" lay-search>
+                                <option value="">请选择字段类型</option>
+                                {% for type in params_list %}
+                                    <option value="{{ type.param_value }}">{{ type.param_value }}</option>
+                                {% endfor %}
+                            </select>
+                        </script>
+
+                        <script type="text/html" id="responseBar">
+                            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                            <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="add">添加行</a>
+                        </script>
+
+                        <table id="responseTable" lay-filter="responseTableFilter"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12" id="buttonTool">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <button class="layui-btn layui-btn-sm layui-btn-radius" type="button"
+                                data-method="check_case">
+                            创建接口
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        var index = 1;
+
+        layui.use(['layer', 'form', 'table'], function () {
+            var $ = layui.jquery, layer = layui.layer, form = layui.form, table = layui.table;
+            //触发事件
+            var active = {
+                check_case: function () {
+                    //var a = $("#fromInfo").serialize();
+                    //console.log(a);
+                    //接口名称
+                    var re_name = $("#re_name").val();
+                    if (re_name == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: "接口名称未填写"
+                        });
+                        return
+                    }
+                    //开发者
+                    var re_dev = $("#re_dev").val();
+                    if (re_dev == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: "开发者未填写"
+                        });
+                        return
+                    }
+                    //版本
+                    var edition = $("#edition").val();
+                    //请求地址
+                    var re_path = $("#re_path").val();
+                    if (re_path == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: "请求地址不能为空"
+                        });
+                        return
+                    }
+                    //模块必须选择
+                    var module_id = $("#pro_module  option:selected").attr("value");
+                    if (isNaN(module_id) || module_id == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: "请检查您的项目和模块是否已经选择"
+                        });
+                        return
+                    }
+                    //请求方式必须选择
+                    var $ele_method = $("#re_method  option:selected");
+                    var re_method = $ele_method.text();
+                    var re_method_id = $ele_method.attr("value");
+                    if (isNaN(re_method_id) || re_method_id == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: "请检查请求方式是否选择"
+                        });
+                        return
+                    }
+                    //版本
+                    var re_des = $("#re_des").val();
+
+                    var re_data = {
+                        re_name: re_name,
+                        developer: re_dev,
+                        edition: edition,
+                        re_path: re_path,
+                        project_id: module_id,
+                        re_method: re_method,
+                        description: re_des,
+                    };
+
+                    //var re_params = {};
+                    //var re_params_tr = [];
+                    //var re_response = {};
+                    //var re_response_tr = [];
+
+                    var re_params = [];
+                    var re_response = [];
+
+                    var if_type_check = 1;
+
+                    $('.layui-table').each(function (index, table) {
+                        //console.log(index);
+                        //console.log(table);
+                        $(table).find("tr").each(function () {
+                            var tr_info = this;
+                            //console.log(tr_info);
+                            switch (index) {
+                                case 0:
+                                    //console.log(tr_info.cells);
+                                    //re_params.th = [tr_info.cells[0].innerText, tr_info.cells[1].innerText, tr_info.cells[2].innerText, tr_info.cells[3].innerText];
+                                    break;
+                                case 1:
+                                    if ($("#if_have").is(":checked")) {
+                                        var if_must;
+                                        //console.log(tr_info.cells);
+                                        if ($(tr_info.cells[2]).find("input:checkbox").is(':checked')) {
+                                            if_must = '1'
+                                        } else {
+                                            if_must = '0'
+                                        }
+                                        var param_type_1 = $(tr_info.cells[1]).find('.layui-this').attr("lay-value");
+                                        //if (isNaN(param_type_1) || param_type_1 == "") {
+                                        if (param_type_1 == "") {
+                                            if_type_check = 0;
+                                            layer.open({
+                                                title: '警告！'
+                                                , content: "请检查您的字段类型是否选择"
+                                            });
+                                            return
+                                        }
+                                        //re_params_tr.push([tr_info.cells[0].innerText, param_type_1, if_must, tr_info.cells[3].innerText]);
+                                        re_params.push(
+                                            {
+                                                field_name: tr_info.cells[0].innerText,
+                                                field_type: param_type_1,
+                                                if_must: if_must,
+                                                field_desc: tr_info.cells[3].innerText
+                                            }
+                                        );
+                                    } else {
+                                    }
+                                    break;
+                                case 2:
+                                    //console.log(tr_info.cells);
+                                    //re_response.th = [tr_info.cells[0].innerText, tr_info.cells[1].innerText, tr_info.cells[2].innerText];
+                                    break;
+                                case 3:
+                                    //console.log(tr_info.cells);
+                                    var param_type_2 = $(tr_info.cells[1]).find('.layui-this').attr("lay-value");
+                                    //if (isNaN(param_type_2) || param_type_2 == "") {
+                                    if (param_type_2 == "") {
+                                        if_type_check = 0;
+                                        layer.open({
+                                            title: '警告！'
+                                            , content: "请检查您的字段类型是否选择"
+                                        });
+                                        return
+                                    }
+                                    //re_response_tr.push([tr_info.cells[0].innerText, param_type_2, tr_info.cells[2].innerText]);
+                                    re_response.push(
+                                        {
+                                            field_name: tr_info.cells[0].innerText,
+                                            field_type: param_type_2,
+                                            field_desc: tr_info.cells[2].innerText
+                                        }
+                                    );
+                                    break;
+                            }
+                        });
+                        //re_params.td = re_params_tr;
+                        //re_response.td = re_response_tr;
+                    });
+
+                    //console.log(re_params);
+                    //console.log(re_response);
+
+                    re_data.re_params = JSON.stringify(re_params);
+                    re_data.re_response = JSON.stringify(re_response);
+
+                    if (if_type_check == 1) {
+                        layer.open({
+                            type: 1,
+                            title: "确认新增",
+                            shadeClose: false,
+                            closeBtn: true,
+                            shade: 0,
+                            btn: ['新增', '取消'],
+                            //area: ['600px', '500px'],
+                            content: $("#check_case"),
+                            yes: function (btn1) {
+                                layer.close(btn1);
+                                var load_index = layer.load();
+                                var if_case = $('input:radio[name=case_type]:checked').val();
+                                //获取用例规则
+                                if (if_case == '1') {
+                                    var all_checked = $("input:checkbox[name='params']:checked");
+                                    var params = [];
+                                    if (all_checked.length == 0) {
+                                        alert("请至少勾选一个规则");
+                                        return;
+                                    } else {
+                                        all_checked.each(function () {
+                                            params.push($(this).attr('placeholder'))
+                                        });
+                                    }
+                                    re_data.if_case = if_case;
+                                    re_data.case_type = JSON.stringify(params);
+                                } else {
+                                    re_data.if_case = if_case;
+                                }
+                                $.ajax({
+                                    url: '{% url "ResourceCenter:RequestsApi" %}',
+                                    data: JSON.stringify(re_data),
+                                    cache: false,
+                                    async: true,
+                                    type: "POST",
+                                    dataType: "json",
+                                    success: function (result) {
+                                        if (result.code == 200) {
+                                            layer.close(load_index);
+                                            layer.open({
+                                                title: '新增结果'
+                                                , content: '接口新增成功，可以在接口列表中查看详情。'
+                                                , yes: function () {
+                                                    layer.closeAll();
+                                                    window.location.href = "/resourcecenter/requests/info/?id=" + result.data;
+                                                }
+                                            });
+                                            //window.location.reload();
+                                        }
+                                    },
+                                    error: function (result) {
+                                        //layer.close(load_index);
+                                        //layer.close(index);
+                                        layer.closeAll();
+                                        //console.log(result);
+                                        //console.log(result.responseJSON.errMsg);
+                                        layer.open({
+                                            title: '请求结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    },
+                                })
+                            },
+                            btn2: function f(index) {
+                                layer.close(index);
+                            }
+                        });
+                    }
+
+                },
+
+            };
+
+            //监听radio
+            form.on("radio(case_type)", function (data) {
+                if (data.value == '1') {
+                    document.getElementById("case_type_list").style.display = "block";
+                } else {
+                    document.getElementById("case_type_list").style.display = "none";
+                }
+            });
+
+
+            $('#buttonTool .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#check_case .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+
+            form.on('select(pro_list)', function (data) {
+                var pro_id = data.value;
+                var re_data = {
+                    parent_id: pro_id,
+                    abandon_flag: 1,
+                };
+                //console.log(pro_id); //复选框value值，也可以通过data.elem.value得到
+                $.ajax({
+                    url: '{% url "BaseCenter:ProjectApi" %}',
+                    data: {
+                        search_data: JSON.stringify(re_data)
+                    },
+                    cache: false,
+                    async: false,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            var info = result.results;
+                            //console.log(info);
+
+                            var strs = '';
+
+                            for (let i = 0; i < info.length; i++) {
+                                strs += '<option value = "' + info[i].id + '">' + info[i].project_name + '</option>';
+                            }
+                            $("#pro_module").html(strs);
+                        }
+                        form.render('select');
+                    },
+                    error: function (result) {
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON,
+                            btn: ['知道了……'],
+                            yes: function () {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                    ,
+                })
+            });
+
+            var tabledata;
+
+            //第一个实例 加载表格
+            var tableIns = table.render({
+                elem: '#demo'
+                //, toolbar: '#toolbarDemo'
+                , defaultToolbar: []
+                , limit: 100
+                , cols: [[ //表头
+                    {field: 'field_name', title: '字段名称', width: 200, edit: 'text'}
+                    , {field: 'field_type', title: '字段类型', width: 160, templet: '#selectTool'}
+                    , {field: 'if_must', title: '是否必填', width: 80, templet: '#checkboxTool'}
+                    , {field: 'if_des', title: '字段描述', edit: 'text'}
+                    , {title: '操作', align: '操作', width: 120, toolbar: '#bar'}
+                ]]
+                , data: [{
+                    "field_name": ""
+                    , "field_type": ""
+                    //, "if_must": ""
+                    , "if_des": ""
+                }]
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    tabledata = res.data;
+                    //去掉下拉框的失焦事件 否则在下拉框里输入值 失焦后变回下拉选项里的值了 没有需要的同学忽略掉即可
+                    $('#demo .layui-form-select').find('input').unbind("blur");
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(tableFilter)', function (obj) {
+                if (obj.event === 'del') {
+                    obj.del();
+                } else if (obj.event === 'add') {
+
+                    tabledata.push({
+                        "field_name": ""
+                        , "field_type": ""
+                        //, "if_must": ""
+                        , "if_des": ""
+                    });
+
+                    table.reload('demo', {
+                        data: tabledata
+                    });
+                }
+            });
+
+            var responseTabledata;
+
+            //第一个实例 加载表格
+            var responseTableIns = table.render({
+                elem: '#responseTable'
+                //, toolbar: '#toolbarDemo'
+                , defaultToolbar: []
+                , limit: 100
+                , cols: [[ //表头
+                    {field: 'field_name', title: '字段名称', width: 200, edit: 'text'}
+                    , {field: 'field_type', title: '字段类型', width: 160, templet: '#responseTypeTool'}
+                    , {field: 'if_des', title: '字段描述', edit: 'text'}
+                    , {title: '操作', align: '操作', width: 120, toolbar: '#responseBar'}
+                ]]
+                , data: [{
+                    "field_name": ""
+                    , "field_type": ""
+                    , "if_des": ""
+                }]
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    responseTabledata = res.data;
+                    //去掉下拉框的失焦事件 否则在下拉框里输入值 失焦后变回下拉选项里的值了 没有需要的同学忽略掉即可
+                    $('.layui-form-select').find('input').unbind("blur");
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(responseTableFilter)', function (obj) {
+                if (obj.event === 'del') {
+                    obj.del();
+                } else if (obj.event === 'add') {
+
+                    responseTabledata.push({
+                        "field_name": ""
+                        , "field_type": ""
+                        //, "if_must": ""
+                        , "if_des": ""
+                    });
+
+                    table.reload('responseTable', {
+                        data: responseTabledata
+                    });
+                }
+            });
+        })
+    </script>
+{% endblock %}

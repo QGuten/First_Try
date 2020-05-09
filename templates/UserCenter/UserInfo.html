@@ -1,0 +1,331 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">个人中心</a>
+                      <a><cite>个人资料</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>个人资料</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">用户ID</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="user_id" id="user_id"
+                                           placeholder="{{ user_info.id }}" class="layui-input" disabled>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">登录用户名</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="username" id="username"
+                                           placeholder="{{ user_info.username }}" class="layui-input" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">姓氏</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="last_name" id="last_name"
+                                           placeholder="{{ user_info.last_name }}" class="layui-input" disabled>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">名字</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="first_name" id="first_name"
+                                           placeholder="{{ user_info.first_name }}" class="layui-input" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">手机号码</label>
+                                <div class="layui-input-inline">
+                                    <input type="tel" name="mobile_no" id="mobile_no" lay-verify="required|phone"
+                                           autocomplete="off" class="layui-input" disabled
+                                           placeholder="{{ user_info.mobile_no }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">邮箱</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="email" id="email" lay-verify="email" autocomplete="off"
+                                           class="layui-input" placeholder="{{ user_info.email }}"
+                                           disabled style="width: 300px">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">所属部门</label>
+                                <div class="layui-input-inline">
+                                    {% if user_info.department %}
+                                        <input type="text" name="department" id="department" class="layui-input"
+                                               disabled value="{{ user_info.department }}">
+                                    {% else %}
+                                        <input type="text" name="department" id="department" class="layui-input"
+                                               disabled value="无">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item" id="current_role">
+                            <label class="layui-form-label">当前角色</label>
+                            {% if roles %}
+                                <div class="layui-input-block">
+                                <input type="text" name="department" id="department" class="layui-input"
+                                       disabled value="{{ roles }}">
+                            {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item" id="current_pro">
+                            <label class="layui-form-label">当前项目</label>
+                            {% if user_pros %}
+                                <div class="layui-input-block">
+                                <input type="text" name="department" id="department" class="layui-input"
+                                       disabled value="{{ user_pros }}">
+                            {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-input-block" id="button_list_1" style="display: block;">
+                                <button class="layui-btn layui-btn-normal" id="edit" type="button"
+                                        onclick="changeInfo()">编辑
+                                </button>
+                                <button class="layui-btn layui-btn-warm" id="edit" type="button"
+                                        data-method="setPasswordBtn">重设密码
+                                </button>
+                            </div>
+                            <div class="layui-input-block" id="button_list_2" style="display: none;">
+                                <button class="layui-btn layui-btn-checked" id="submit" type="button"
+                                        data-method="submit_info">立即提交
+                                </button>
+                                <button class="layui-btn layui-btn-primary" id="cancel" type="button"
+                                        onclick="closeChanges()">取消
+                                </button>
+                            </div>
+                             <div class="layui-input-block">
+                                 <div class="layui-form-mid" style="color: red;">此编辑不包含角色和项目！！！</div>
+                             </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="setPassword" style="display: none;">
+        <form class="layui-form">
+            <div class="layui-form-item" style="margin-top: 20px">
+                <div class="layui-inline">
+                    <label class="layui-form-label">新密码</label>
+                    <div class="layui-input-inline">
+                        <input type="password" name="password_1" id="password_1"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">重复密码</label>
+                    <div class="layui-input-inline">
+                        <input type="password" name="password_2" id="password_2"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="margin-right: 30px">
+                <div class="layui-inline">
+                    <label class="layui-form-label">密码显示</label>
+                    <div class="layui-input-inline">
+                        <input type="checkbox" name="password_show" lay-skin="switch" lay-text="开启|关闭"
+                               lay-filter="password_show">
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}
+{% block js %}
+    <script type="text/javascript">
+        function changeInfo() {
+            var id_list = ['username', 'last_name', 'first_name', 'mobile_no', 'email', 'department'];
+            for (var i = 0; i < id_list.length; i++) {
+                var username_info = $("#" + id_list[i]);
+                var name = username_info.attr('placeholder');
+                username_info.attr('value', name);
+                username_info.removeAttr('placeholder');
+                username_info.removeAttr('disabled');
+            }
+            //控制按钮
+            document.getElementById("button_list_1").style.display = "none";
+            document.getElementById("button_list_2").style.display = "block";
+            //角色展示
+        }
+
+        function closeChanges() {
+            var id_list = ['username', 'last_name', 'first_name', 'mobile_no', 'email', 'department'];
+            for (var i = 0; i < id_list.length; i++) {
+                var ele_info = $("#" + id_list[i]);
+                var info = ele_info.attr('value');
+                ele_info.attr('placeholder', info);
+                ele_info.attr('disabled', true);
+            }
+            //控制按钮
+            document.getElementById("button_list_1").style.display = "block";
+            document.getElementById("button_list_2").style.display = "none";
+        }
+    </script>
+    <script>
+        layui.use(['layer', 'form'], function () {
+            var $ = layui.jquery, layer = layui.layer, form = layui.form;
+            //触发事件
+            var active = {
+                setPasswordBtn: function () {
+                    layer.open({
+                        type: 1,
+                        title: "重置密码",
+                        shadeClose: false,
+                        closeBtn: false,
+                        btn: ['确认', '取消'],
+                        shade: 0,
+                        area: ['500px', '300px'],
+                        content: $("#setPassword"),
+                        yes: function (index) {
+                            var user_id = $("#user_id").attr('placeholder');
+                            var password_1 = $("#password_1").val();
+                            var password_2 = $("#password_2").val();
+                            var data = {
+                                user_id: user_id,
+                                password_1: password_1,
+                                password_2: password_2
+                            };
+                            $.ajax({
+                                url: '{% url "UserCenter:SetPassword" %}',
+                                //data: data,
+                                data: JSON.stringify(data),
+                                cache: false,
+                                async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.open({
+                                            title: '更新结果',
+                                            content: '更新成功',
+                                            btn: ['知道了……'],
+                                            yes: function () {
+                                                window.location.reload();
+                                            }
+                                        });
+                                    }
+                                    layer.close(index);
+                                },
+                                error: function (result) {
+                                    layer.close(index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: "更新异常" + result.responseJSON,
+                                        btn: ['知道了……'],
+                                        yes: function () {
+                                            window.location.reload();
+                                        }
+                                    });
+                                },
+                            })
+                        },
+                    })
+                },
+                submit_info: function () {
+                    var user_id = $("#user_id").attr('placeholder');
+                    var username = $("#username").val();
+                    var last_name = $("#last_name").val();
+                    var first_name = $("#first_name").val();
+                    var mobile_no = $("#mobile_no").val();
+                    var email = $("#email").val();
+                    var department = $("#department").val();
+                    var data_json = {
+                        user_id: user_id,
+                        username: username,
+                        last_name: last_name,
+                        first_name: first_name,
+                        mobile_no: mobile_no,
+                        email: email,
+                        department: department,
+                    };
+                    console.log(data_json);
+                    $.ajax({
+                        url: '{% url "UserCenter:UsersApi" %}',
+                        data: JSON.stringify(data_json),
+                        cache: false,
+                        async: false,
+                        type: "PUT",
+                        dataType: "json",
+                        success: function (result) {
+                            if (result.code == 200) {
+                                layer.open({
+                                    title: '更新结果',
+                                    content: '更新成功',
+                                    btn: ['知道了……'],
+                                    yes: function () {
+                                        window.location.reload();
+                                    }
+                                });
+                            }
+                            layer.close(index);
+                        },
+                        error: function (result) {
+                            layer.close(index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: "更新异常" + result.responseJSON,
+                                btn: ['知道了……'],
+                                yes: function () {
+                                    window.location.reload();
+                                }
+                            });
+                        },
+                    })
+                }
+            };
+
+            $('#re_info .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            form.on('switch(password_show)', function (data) {
+                if (data.elem.checked) {
+                    $("#password_1").attr('type', 'text');
+                    $("#password_2").attr('type', 'text');
+                } else {
+                    $("#password_1").attr('type', 'password');
+                    $("#password_2").attr('type', 'password');
+                }
+            });
+
+        });
+
+    </script>
+{% endblock %}

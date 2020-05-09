@@ -1,0 +1,494 @@
+{% extends 'layout/base.html' %}
+{% block css %}
+    <style>
+        .my-card {
+        {#background: lightskyblue;#} padding: 20px;
+            /*color: lightskyblue;*/
+            /*margin-right: 10px;
+            margin-bottom: 10px;*/
+            font-size: 20px;
+            border: 1px solid lightskyblue
+        }
+
+        .header_data {
+            display: block;
+            /*padding: 20px;*/
+            text-align: right;
+            font-weight: bold;
+            /*color: lightskyblue;*/
+            /*margin-right: 10px;
+            margin-bottom: 10px;*/
+            font-size: 16px;
+            /*border: 1px solid lightskyblue*/
+        }
+
+        .more {
+            display: block;
+            text-align: right;
+            /*color: lightskyblue;*/
+            font-size: 10px;
+            margin-left: 40px;
+        }
+
+        .layuiadmin-badge {
+            top: 50%;
+            margin-top: -9px;
+            position: absolute;
+            right: 15px;
+            line-height: 18px;
+        }
+
+        .layuiadmin-big-font {
+            font-size: 36px;
+            color: #666;
+            line-height: 36px;
+            padding: 5px 0 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+            white-space: nowrap;
+        }
+
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a><cite>我的工作台</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    迭代数量
+                    <span class="layui-badge layui-bg-blue layuiadmin-badge">迭代</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{ it_num }}</p>
+                    <p>
+                        <a class="more" href="{% url 'JobCenter:IterationIndex' %}">查看更多>>></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    任务数量
+                    <span class="layui-badge layui-bg-cyan layuiadmin-badge">任务</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{ job_nub }}</p>
+                    <p>
+                        <a class="more" href="{% url 'JobCenter:JobIndex' %}">查看更多>>></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    用例数量
+                    <span class="layui-badge layui-bg-orange layuiadmin-badge">用例</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{ case_num }}</p>
+                    <p>
+                        <a class="more" href="{% url 'CaseCenter:CaseIndex' %}">查看更多>>></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    接口数量
+                    <span class="layui-badge layui-bg-green layuiadmin-badge">接口</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{ re_num }}</p>
+                    <p>
+                        <a class="more" href="{% url 'ResourceCenter:RequestsIndex' %}">查看更多>>></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                <div class="layui-card">
+{#                    <div class="layui-card-header">#}
+{#                        报告列表#}
+{#                    </div>#}
+                    <div class="layui-card-body">
+                        <div class="layui-tab layui-tab-card">
+                            <ul class="layui-tab-title">
+                                <li class="layui-this">迭代报告</li>
+                                <li>任务报告</li>
+                            </ul>
+                            <div class="layui-tab-content">
+                                <div class="layui-tab-item layui-show">
+                                    <table class="layui-hide" id="it_re_table" lay-filter="it_re_table"></table>
+                                    <a class="more" href="{% url 'JobCenter:ReportIndex' %}">查看更多>>></a>
+                                </div>
+                                <div class="layui-tab-item">
+                                    <table class="layui-hide" id="report_table" lay-filter="report_table"></table>
+                                    <a class="more" href="{% url 'JobCenter:ReportIndex' %}">查看更多>>></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        迭代列表
+                    </div>
+                    <div class="layui-card-body">
+                        <table class="layui-hide" id="it_table" lay-filter="it_table"></table>
+                        <a class="more" href="{% url 'JobCenter:IterationIndex' %}">查看更多>>></a>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    任务列表
+                </div>
+                <div class="layui-card-body">
+                    <table class="layui-hide" id="job_table" lay-filter="job_table"></table>
+                    <a class="more" href="{% url 'JobCenter:JobIndex' %}">查看更多>>></a>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    接口列表
+                </div>
+                <div class="layui-card-body">
+                    <table class="layui-hide" id="re_table" lay-filter="re_table"></table>
+                    <a class="more" href="{% url 'ResourceCenter:RequestsIndex' %}">查看更多>>></a>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    用例列表
+                </div>
+                <div class="layui-card-body">
+                    <table class="layui-hide" id="case_table" lay-filter="case_table"></table>
+                    <a class="more" href="{% url 'CaseCenter:CaseIndex' %}">查看更多>>></a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        var table_no = 0;
+
+        var filter_list = [];
+
+        layui.use(['layer', 'form', 'table', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, element = layui.element;
+            //触发事件
+            var active = {
+                add_table: function () {
+                },
+            };
+
+            $('.layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            var it_re_data = {};
+            it_re_data['it__pro__id__in'] = $("#auto_pro_list").attr('value');
+            it_re_data['abandon_flag'] = 1;
+
+            table.render({
+                elem: '#it_re_table'
+                , url: '/jobcenter/api/iterationrecords/'
+                , title: '迭代报告列表'
+                , id: 'it_re_table'
+                //, toolbar: true
+                , where: {
+                    search_data: JSON.stringify(it_re_data)
+                }
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 40}
+                    , {field: 'it_name', title: '迭代名称'}
+                    , {field: 'exe_overview', title: '执行概览', width: 300, templet: function (res) {
+                            console.log(res.exe_overview);
+                            var data = eval("(" + res.exe_overview + ")");
+                            console.log(typeof data);
+                            return '共执行：' + data.all_num + '，已执行：' + data.pass_num + '，执行异常：' + data.fail_num;
+                        }}
+                    , {field: 'created_at', title: '执行时间'}
+                    , {field: 'updated_at', title: '结束时间'}
+                    , {field: 'updated_by', title: '执行人'}
+                    //, {field: 'case_count', title: '用例执行统计'}
+                    //, {field: 'setup_count', title: '前提条件执行统计'}
+                    //, {title: '操作', align: '操作', toolbar: '#re_bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+            var report_data = {};
+            report_data['job__pro__id__in'] = $("#auto_pro_list").attr('value');
+            report_data['abandon_flag'] = 1;
+
+            table.render({
+                elem: '#report_table'
+                , url: '/jobcenter/api/reports/'
+                , title: '报告列表'
+                , id: 'report_table'
+                //, toolbar: true
+                , where: {
+                    search_data: JSON.stringify(report_data)
+                }
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'report_name', title: '报告名称'}
+                    //, {field: 'job_name', title: '所属任务'}
+                    , {
+                        field: 'status', title: '执行状态', width: 100, templet: function (res) {
+                            if (res.status == 10) {
+                                return "正在执行"
+                            } else {
+                                return "执行结束"
+                            }
+                        }
+                    }
+                    , {field: 'created_at', title: '执行时间', width: 150}
+                    , {field: 'updated_at', title: '结束时间', width: 150}
+                    , {field: 'updated_by', title: '执行人', width: 100}
+                    //, {field: 'case_count', title: '用例执行统计'}
+                    //, {field: 'setup_count', title: '前提条件执行统计'}
+                    //, {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+            table.render({
+                elem: '#it_table'
+                , url: '/jobcenter/api/iterations/'
+                , title: '迭代数据表'
+                , id: 'it_table'
+                //, toolbar: true
+                //, toolbar: '#toolbar'
+                , where: {
+                    search_data: JSON.stringify({
+                        pro__id__in: $("#auto_pro_list").attr('value'),
+                        abandon_flag: 1
+                    })
+                }
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'name', title: '迭代名称'}
+                    //, {field: 'state', title: '迭代状态', width: 100}
+                    , {field: 'pro_name', title: '所属项目', width: 100}
+                    , {field: 'version_name', title: '所属版本', width: 100}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 120, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked disabled>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" disabled>'
+                            }
+                        }
+                    }
+                    , {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    //, {title: '操作', align: '操作', toolbar: '#bar', width: 140}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+            var job_re_data = {};
+            job_re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+            job_re_data['abandon_flag'] = 1;
+
+            table.render({
+                elem: '#job_table'
+                , url: '/jobcenter/api/jobs/'
+                , title: '测试父任务列表'
+                , id: 'job_table'
+                //, toolbar: true
+                , where: {
+                    search_data: JSON.stringify(job_re_data)
+                }
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'job_name', title: '任务名称'}
+                    //, {field: 'job_state', title: '任务状态', width: 100}
+                    , {field: 'job_type_name', title: '任务类型', width: 200}
+                    , {field: 'pro_name', title: '所属项目', width: 100}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked disabled>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" disabled>'
+                            }
+                        }
+                    }
+                    , {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    //, {title: '操作', align: '操作', toolbar: '#bar', width: 160}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+            var re_data = {};
+            re_data['project__parent__id__in'] = $("#auto_pro_list").attr('value');
+            re_data['abandon_flag'] = 1;
+
+            table.render({
+                elem: '#re_table'
+                , url: '/resourcecenter/api/requests/'
+                , id: 're_table'
+                //, toolbar: true
+                , where: {
+                    search_data: JSON.stringify(re_data)
+                }
+                , cols: [[
+                    {field: 'id', title: '接口ID', width: 80}
+                    , {field: 're_name', title: '接口名称'}
+                    //, {field: 're_path', title: '接口地址'}
+                    //, {field: 're_method', title: '请求方式', width: 80}
+                    //, {field: 'developer', title: '开发者', width: 100}
+                    , {field: 'project_name', title: '所属模块', width: 100}
+                    //, {field: 'edition', title: '版本', width: 100}
+                    //, {
+                    //    field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                    //        if (res.abandon_flag == 1) {
+                    //            return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked disabled>'
+                    //        } else {
+                    //            return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" disabled>'
+                    //        }
+                    //    }
+                    //}
+                    //, {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    //, {field: 'if_update', title: '是否更新', width: 100}
+                    //, {title: '操作', align: '操作', toolbar: '#bar', width: 80}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+            var case_data = {};
+            case_data['pro__parent__id__in'] = $("#auto_pro_list").attr('value');
+            case_data['abandon_flag'] = 1;
+
+            table.render({
+                elem: '#case_table'
+                , url: '/casecenter/api/caseinfo/'
+                , title: '测试用例数据表'
+                , id: 'case_table'
+                //, toolbar: true
+                , where: {
+                    search_data: JSON.stringify(case_data)
+                }
+                , cols: [[
+                    {field: 'id', title: '用例ID', width: 60}
+                    , {field: 'case_name', title: '用例名称'}
+                    , {field: 'pro_name', title: '模块名称', width: 100}
+                    //, {field: 'case_type_name', title: '用例类型', width: 100}
+                    //, {
+                    //    field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                    //        if (res.abandon_flag == 1) {
+                    //            return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                    //        } else {
+                    //            return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                    //        }
+                    //    }
+                    //}
+                    //, {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    //, {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+            });
+
+
+        });
+    </script>
+{% endblock %}

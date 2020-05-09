@@ -1,0 +1,377 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">系统配置</a>
+                      <a><cite>系统配置</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body" id="sys_params">
+                    <form class="layui-form" id="exe_case">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <button class="layui-btn layui-btn-normal" type="button" data-method="sys_set">新增配置
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <select name="case_search_type" class="layui-form-select"
+                                        lay-filter="case_search_type"
+                                        id="case_search_type">
+                                    <option value="">请选择搜索条件</option>
+                                    <option value="id">ID</option>
+                                    <option value="param_key__contains">参数键</option>
+                                    <option value="param_value__contains">参数值</option>
+                                    <option value="param_name__contains">参数名称</option>
+                                    {#                                    <option value="pro">模块名称</option>#}
+                                    {#                                    <option value="case_type">用例类型</option>#}
+                                </select>
+                            </div>
+                            <div class="layui-inline">
+                                <input class="layui-input" name="search_data" id="search_data"
+                                       autocomplete="off">
+                            </div>
+                            <div class="layui-inline">
+                                <button class="layui-btn" type="button" data-type="reload"
+                                        data-method="search_case">搜索
+                                </button>
+                            </div>
+
+                        </div>
+                    </form>
+                    <script type="text/html" id="bar">
+                        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">查看详情</a>
+                    </script>
+                    <table class="layui-hide" id="case_table" lay-filter="case_table"></table>
+
+                    <div id="sys_list" style="display: none;">
+                        <form class="layui-form" id="data_form">
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">参数键</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="param_key" id="param_key"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">参数值</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="param_value" id="param_value"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">参数名称</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="param_name" id="param_name"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">描述</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="sys-description" id="sys-description"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn" type="button" onclick="AddSysParams()">添加</button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                    <button type="button" class="layui-btn layui-btn-primary"
+                                            onclick="closeAdd()">取消
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        layui.use(['layer', 'form', 'table', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form, element = layui.element;
+            //触发事件
+            var active = {
+                sys_set: function () {
+                    layer.open({
+                        type: 1,
+                        title: "新增配置",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        area: ['600px', '500px'],
+                        content: $("#sys_list"),
+                        success: function (layero, index) {
+                        },
+                    })
+                },
+                search_case: function () {
+                    var search_data = $("#search_data").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (search_data == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (search_data != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = search_data;
+                    table.reload('case_table', {
+                        url: '/basecenter/api/sysparam/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                    })
+                },
+            };
+
+            $('#sys_params .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(case_table)', function (obj) {
+                if (obj.event === 'info') {
+                    //console.log(obj.data.param_key);
+                    layer.prompt({
+                            formType: 0,
+                            value: obj.data.param_key,
+                            title: '修改配置',
+                            area: ['800px', '350px'] //自定义文本域宽高
+                        }, function (value, index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            $.ajax({
+                                url: '{% url "BaseCenter:SysParamApi" %}',
+                                data: JSON.stringify({
+                                    sys_id: obj.data.id,
+                                    param_key: value,
+                                    param_name: $("#up_config_name").val(),
+                                    param_value: $("#up_config_value").val(),
+                                    description: $("#up_config_desc").val(),
+                                }),
+                                cache: false,
+                                async: false,
+                                type: "PUT",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        }
+                    );
+                    var html = '<br/><input type="text" id= "up_config_name" class="layui-input" value="' + obj.data.param_value + '"/>';
+                    html += '<br/><input type="text" id= "up_config_value" class="layui-input" value="' + obj.data.param_name.replace(/\"/g, "'") + '"/>';
+                    html += '<br/><input type="text" id= "up_config_desc" class="layui-input" value="' + obj.data.description.replace(/\"/g, "'") + '"/>';
+                    element.render('lay-filter');
+
+                    $(".layui-layer-content").append(html)
+                    //layer.open({
+                    //    title: '温馨提示'
+                    //    , content: '功能正在紧锣密鼓开发中……'
+                    //});
+                }
+            });
+
+            var table_cache;
+
+            table.render({
+                elem: '#case_table'
+                , url: '/basecenter/api/sysparam/'
+                , title: '系统项目配置表'
+                , id: 'case_table'
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'param_key', title: '参数键'}
+                    , {field: 'param_value', title: '参数值'}
+                    , {field: 'param_name', title: '参数名称'}
+                    , {field: 'description', title: '描述', width: 200}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                            }
+                        }
+                    }
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    table_cache = res.results;
+                }
+            });
+            form.on('switch(Enable)', function (data) {
+                //这里是当选择一个下拉选项的时候 把选择的值赋值给表格的当前行的缓存数据 否则提交到后台的时候下拉框的值是空的
+                var elem = data.othis.parents('tr');
+                var dataindex = elem.attr("data-index");
+                var sys_id;
+                var abandon_flag;
+                //console.log(dataindex);
+                if (elem.find("input:checkbox").is(':checked')) {
+                    abandon_flag = 1;
+                    //console.log('启用');
+                } else {
+                    abandon_flag = 0;
+                    //console.log('禁用');
+                }
+                $.each(table_cache, function (index, value) {
+                    if (value.LAY_TABLE_INDEX == dataindex) {
+                        sys_id = value.id
+                    }
+                });
+                var load_index = layer.load();
+                $.ajax({
+                    url: '{% url "BaseCenter:SysParamApi" %}',
+                    data: JSON.stringify({
+                        sys_id: sys_id,
+                        abandon_flag: abandon_flag,
+                    }),
+                    cache: false,
+                    async: false,
+                    type: "PUT",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            layer.close(load_index);
+                            layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                //do something
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.close(load_index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: result.responseJSON.errMsg
+                            });
+                        }
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON.errMsg
+                        });
+                    },
+                    complete: function () {
+                        document.getElementById("data_form").reset();
+                    }
+                })
+            });
+        });
+
+
+        function closeAdd() {
+            document.getElementById("sys_list").style.display = "none";
+            // 页面刷新
+            location.reload();
+        }
+
+        function AddSysParams() {
+            var param_key = $("#param_key").val();
+            var param_value = $("#param_value").val();
+            var param_name = $("#param_name").val();
+            var description = $("#sys-description").val();
+            var re_data = {
+                param_key: param_key,
+                param_value: param_value,
+                param_name: param_name,
+                description: description,
+            };
+            $.ajax({
+                url: '{% url "BaseCenter:SysParamApi" %}',
+                data: JSON.stringify(re_data),
+                cache: false,
+                async: false,
+                type: "POST",
+                dataType: "json",
+                success: function (result) {
+                    if (result.code == 200) {
+                        layer.open({
+                            title: '添加结果'
+                            , content: '添加成功'
+                        });
+                        window.location.reload();
+                    }
+                },
+                error: function (result) {
+                    layer.open({
+                        title: '添加结果'
+                        , content: result.responseJSON.errMsg
+                    });
+                },
+            })
+        }
+
+    </script>
+{% endblock %}

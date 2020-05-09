@@ -1,0 +1,292 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">系统任务</a>
+                      <a><cite>系统任务</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-card-body" id="job_list">
+                        <table class="layui-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>任务名称</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if job_list %}
+                                {% for info in job_list %}
+                                    <tr>
+                                        <td>{{ info.id }}</td>
+                                        <td>{{ info.name }}</td>
+                                        <td>
+                                            {% if info.state == 20 %}
+                                                <a class="layui-btn layui-btn-xs layui-btn-checked">进行中</a>
+                                            {% elif info.state == 10 %}
+                                                <a class="layui-btn layui-btn-xs layui-btn-warm">空闲中</a>
+                                            {% elif info.state == 30 %}
+                                                <a class="layui-btn layui-btn-xs layui-btn-normal">已经完成</a>
+                                            {% elif info.state == 110 %}
+                                                <a class="layui-btn layui-btn-danger layui-btn-xs">已取消</a>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="layui-table-cell laytable-cell-2-0-5">
+                                                <button type="button" class="layui-btn layui-btn-xs layui-btn-normal" onclick="window.location.href='{% url "BaseCenter:ReDocsJobRecord" %}'">
+                                                    查看执行记录
+                                                </button>
+                                                <button type="button" class="layui-btn layui-btn-xs"
+                                                        data-method="job_set">点击执行
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+                        <div id="exe_job" style="display: none;">
+                            <form class="layui-form">
+                                <div class="layui-form-item" style="margin-top: 20px">
+                                    <label class="layui-form-label">选择项目</label>
+                                    {% if config_list %}
+                                        <div class="layui-input-block">
+                                            {% for info in config_list %}
+                                                <input type="checkbox" name="config_list" title="{{ info.name }}"
+                                                       placeholder="{{ info.id }}">
+                                                <br><span>{{ info.value }}</span><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="layui-input-block">
+                                            <span>还没有可选择的项目，请先添加项目……</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">测试用例</label>
+                                    <div class="layui-input-block">
+                                        <input type="radio" name="case_type" value="0" title="不生成测试用例" checked="checked"
+                                               lay-filter="case_type">
+                                        <input type="radio" name="case_type" value="1" title="生成测试用例"
+                                               lay-filter="case_type">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item" style="display: none" id="case_type_list">
+                                    <label class="layui-form-label">生成规则</label>
+                                    {% if case_type_list %}
+                                        <div class="layui-input-block">
+                                            {% for info in case_type_list %}
+                                                <input type="checkbox" name="params" title="{{ info.param_name }}"
+                                                       placeholder="{{ info.param_value }}">
+                                                <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                                    <span>{{ info.param_name }}</span><i
+                                                        class="layui-icon layui-icon-ok"></i></div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+{#                                <div class="layui-form-item">#}
+{#                                    <div class="layui-input-block">#}
+{#                                        <button class="layui-btn" type="button" onclick="AddProject()">执行</button>#}
+{#                                        <button type="reset" class="layui-btn layui-btn-primary">重选</button>#}
+{#                                        <button type="button" class="layui-btn layui-btn-primary"#}
+{#                                                onclick="closeAdd()">取消#}
+{#                                        </button>#}
+{#                                    </div>#}
+{#                                </div>#}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        var layer;
+
+        layui.use(['layer', 'form', 'element', 'laydate'], function () {
+            var $ = layui.jquery, layer = layui.layer, form = layui.form;
+            //触发事件
+            var active = {
+                job_set: function () {
+                    layer.open({
+                        type: 1,
+                        title: "执行任务",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        btn: ['执行', '取消'],
+                        area: ['600px', '700px'],
+                        content: $("#exe_job"),
+                        yes: function (btn1) {
+                            //获取选择的项目
+                            layer.close(btn1);
+                            var index = layer.load();
+                            var checked_list = $("input:checkbox[name='config_list']:checked");
+                            var config_id_list = [];
+                            if (checked_list.length == 0) {
+                                alert("请至少勾选一个文档地址");
+                                layer.close(index);
+                                return;
+                            } else {
+                                checked_list.each(function () {
+                                    config_id_list.push($(this).attr('placeholder'))
+                                });
+                            }
+                            var if_case = $('input:radio[name=case_type]:checked').val();
+                            var re_data;
+                            //获取用例规则
+                            if (if_case == '1') {
+                                var all_checked = $("input:checkbox[name='params']:checked");
+                                var params = [];
+                                if (all_checked.length == 0) {
+                                    alert("请至少勾选一个规则");
+                                    return;
+                                } else {
+                                    all_checked.each(function () {
+                                        params.push($(this).attr('placeholder'))
+                                    });
+                                }
+                                re_data = {
+                                    job_id: 1,
+                                    config_id: config_id_list,
+                                    if_case: if_case,
+                                    case_type: params,
+                                };
+                            } else {
+                                re_data = {
+                                    job_id: 1,
+                                    config_id: config_id_list,
+                                    if_case: if_case,
+                                };
+                            }
+                            $.ajax({
+                                url: '{% url "ResourceCenter:GetRequestsDocsForUrl" %}',
+                                data: JSON.stringify(re_data),
+                                cache: false,
+                                async: true,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(index);
+                                        layer.open({
+                                            title: '请求结果'
+                                            , content: '任务执行完毕，可到接口管理中查看解析完毕的接口'
+                                            , yes: function (index) {
+                                                layer.close(index);
+                                                window.location.reload();
+                                            }
+                                        });
+                                        //window.location.reload();
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(index);
+                                    layer.open({
+                                        title: '请求结果'
+                                        , content: result.responseJSON
+                                    });
+                                },
+                            })
+                        }
+                        , btn2: function f(index) {
+                            layer.close(index);
+                        }
+                    })
+                },
+            };
+
+            $('#job_list .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            //监听radio
+            form.on("radio(case_type)", function (data) {
+                if (data.value == '1') {
+                    document.getElementById("case_type_list").style.display = "block";
+                } else {
+                    document.getElementById("case_type_list").style.display = "none";
+                }
+            })
+        });
+
+        function closeAdd() {
+            document.getElementById("exe_job").style.display = "none";
+            // 页面刷新
+            location.reload();
+        }
+
+        function AddProject() {
+            //获取选择的项目
+            var index = layer.load();
+            var checked_list = $("input:checkbox[name='config_list']:checked");
+            var config_id_list = [];
+            if (checked_list.length == 0) {
+                alert("请至少勾选一个文档地址");
+                return;
+            } else {
+                checked_list.each(function () {
+                    config_id_list.push($(this).attr('placeholder'))
+                });
+            }
+            var re_data = {
+                job_id: 1,
+                config_id: config_id_list
+            };
+            $.ajax({
+                url: '{% url "ResourceCenter:GetRequestsDocsForUrl" %}',
+                data: JSON.stringify(re_data),
+                cache: false,
+                async: true,
+                type: "POST",
+                dataType: "json",
+                success: function (result) {
+                    if (result.code == 200) {
+                        layer.close(index);
+                        layer.open({
+                            title: '请求结果'
+                            , content: '开始执行，请稍后刷新页面查看结果'
+                            , yes: function (index) {
+                                layer.close(index);
+                                window.location.reload();
+                            }
+                        });
+                        //window.location.reload();
+                    }
+                },
+                error: function (result) {
+                    layer.open({
+                        title: '请求结果'
+                        , content: result.responseJSON
+                    });
+                },
+            })
+        }
+
+        function updateProject() {
+            layer.open({
+                title: '温馨提示'
+                , content: '正在努力开发中……'
+            });
+        }
+    </script>
+{% endblock %}

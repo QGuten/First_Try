@@ -1,0 +1,508 @@
+{% extends 'layout/base.html' %}
+{% block css %}
+    <style>
+        table .layui-layer-content {
+            text-align: center;
+            margin: 20px;
+            white-space: pre-wrap;
+        }
+
+        #value {
+            resize: none;
+            width: 400px;
+            height: 100px;
+            padding: 10px;
+        }
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="#">资源库</a>
+                      <a><cite>配置管理</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card" id="config_list">
+                <div class="layui-card-body">
+                    <div class="layui-form layui-border-box">
+                        <div class="layui-table-tool">
+                            <form class="layui-form" id="exe_case">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <button class="layui-btn layui-btn-normal" type="button"
+                                                data-method="config_set">
+                                            新增配置
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <select name="case_search_type" class="layui-form-select" lay-filter="pro_list"
+                                                id="pro_list">
+                                            <option value="">请选择所属项目</option>
+                                            {% for pro in project_list %}
+                                                <option value="{{ pro.id }}">{{ pro.project_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <select name="case_search_type" class="layui-form-select"
+                                                lay-filter="case_search_type"
+                                                id="case_search_type">
+                                            <option value="">请选择搜索条件</option>
+                                            <option value="id">ID</option>
+                                            <option value="key__contains">筛选Key</option>
+                                            <option value="name__contains">配置名称</option>
+                                            <option value="value__contains">配置内容</option>
+                                        </select>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <input class="layui-input" name="search_data" id="search_data"
+                                               autocomplete="off">
+                                    </div>
+                                    <div class="layui-inline">
+                                        <button class="layui-btn" type="button" data-type="reload"
+                                                data-method="search_case">搜索
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                        <div class="layui-table-box" id="AddPro">
+                            <script type="text/html" id="bar">
+                                <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">编辑</a>
+                            </script>
+                            <table class="layui-hide" id="request_table" lay-filter="request_table"></table>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-card-body">
+                    <div id="add_config" style="display: none;">
+                        <form class="layui-form" id="data_form">
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">筛选key</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="key" id="key"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">配置内容</label>
+                                    <div class="layui-input-inline">
+                                        <textarea type="text" name="value" id="value"
+                                                  class="layui-input"></textarea>
+                                        {#                                        <input type="text" name="value" id="value"#}
+                                        {#                                               class="layui-input">#}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">配置名称</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="name" id="name"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="margin-top: 20px">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">描述</label>
+                                    <div class="layui-input-inline">
+                                        <input type="text" name="description" id="description"
+                                               class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">所属项目</label>
+                                {% if project_list %}
+                                    <div class="layui-input-block">
+                                        {% for info in project_list %}
+                                            <input type="radio" name="pro_id" value="{{ info.project_name }}"
+                                                   title="{{ info.project_name }}" placeholder="{{ info.id }}">
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="layui-input-block">
+                                        <span>还没有可选择的项目，请先添加项目</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+{##}
+{#                            <div class="layui-form-item">#}
+{#                                <div class="layui-input-block">#}
+{#                                    <button class="layui-btn" type="button" onclick="AddConfig()">立即提交</button>#}
+{#                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>#}
+{#                                </div>#}
+{#                            </div>#}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        layui.use(['layer', 'form', 'table', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, form = layui.form, table = layui.table, element = layui.element;
+            //触发事件
+            var active = {
+                config_set: function () {
+                    layer.open({
+                        type: 1,
+                        title: "新增配置",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        area: ['600px', '500px'],
+                        btn: ['确定', '取消'],
+                        content: $("#add_config"),
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var key = $("#key").val();
+                            var value = $("#value").val();
+                            var name = $("#name").val();
+                            var description = $("#description").val();
+                            //获取选择的菜单
+                            var pro_id = $('input:radio[name=pro_id]:checked').attr('placeholder');
+                            var re_data = {
+                                key: key,
+                                name: name,
+                                value: value,
+                                description: description,
+                                pro_id: pro_id,
+                            };
+                            $.ajax({
+                                url: '{% url "ResourceCenter:ConfigApi" %}',
+                                data: JSON.stringify(re_data),
+                                cache: false,
+                                async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        },
+                        btn2: function () {
+                            document.getElementById("data_form").reset();
+                        }
+                    })
+                },
+                search_case: function () {
+                    //模块必须选择
+                    var project_id = $("#pro_list  option:selected").attr("value");
+                    var search_data = $("#search_data").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (search_data == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (search_data != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = search_data;
+                    re_data["pro_id"] = project_id;
+                    re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+                    table.reload('request_table', {
+                        url: '/resourcecenter/api/configs/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                    })
+                }
+            };
+
+            $('#config_list .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            var config_table_cache;
+
+            var re_data = {};
+            re_data['pro__id__in'] = $("#auto_pro_list").attr('value');
+
+            table.render({
+                elem: '#request_table'
+                , url: '/resourcecenter/api/configs/'
+                , id: 'request_table'
+                , where: {
+                    search_data: JSON.stringify(re_data)
+                }
+                , cols: [[
+                    {field: 'id', title: '接口ID', width: 80}
+                    , {field: 'project_name', title: '所属项目', width: 100}
+                    , {field: 'key', title: '筛选Key', width: 120}
+                    //, {field: 'name', title: '配置名称'}
+                    , {field: 'value', title: '配置内容'}
+                    //, {field: 'description', title: '描述', width: 200}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                            }
+                        }
+                    }
+                    , {field: 'updated_at', title: '操作时间', width: 160}
+                    , {field: 'updated_by', title: '操作人', width: 120}
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    config_table_cache = res.results;
+                }
+            });
+
+            form.on('switch(Enable)', function (data) {
+                //这里是当选择一个下拉选项的时候 把选择的值赋值给表格的当前行的缓存数据 否则提交到后台的时候下拉框的值是空的
+                var elem = data.othis.parents('tr');
+                var dataindex = elem.attr("data-index");
+                var config_id;
+                var abandon_flag;
+                console.log(dataindex);
+                if (elem.find("input:checkbox").is(':checked')) {
+                    abandon_flag = 1;
+                    console.log('启用');
+                } else {
+                    abandon_flag = 0;
+                    console.log('禁用');
+                }
+                $.each(config_table_cache, function (index, value) {
+                    if (value.LAY_TABLE_INDEX == dataindex) {
+                        config_id = value.id
+                    }
+                });
+                var load_index = layer.load();
+                $.ajax({
+                    url: '{% url "ResourceCenter:ConfigApi" %}',
+                    data: JSON.stringify({
+                        config_id: config_id,
+                        abandon_flag: abandon_flag,
+                    }),
+                    cache: false,
+                    async: false,
+                    type: "PUT",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            layer.close(load_index);
+                            layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                //do something
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.close(load_index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: result.responseJSON
+                            });
+                        }
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON
+                        });
+                    },
+                })
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(request_table)', function (obj) {
+                if (obj.event === 'info') {
+                    console.log(obj.data);
+                    $("#key").val(obj.data.key);
+                    $("#value").val(obj.data.value.replace(/\"/g, "'"));
+                    $("#name").val(obj.data.name);
+                    $("#description").val(obj.data.description.replace(/\"/g, "'"));
+                    if (obj.data.project_name) {
+                        $.each($('input:radio[name="pro_id"]'), function (index, value) {
+                            console.log(value.value);
+                            if (value.value == obj.data.project_name) {
+                                //console.log('两个变量一致');
+                                $(value).prop('checked', true);
+                                form.render('radio');
+                                return false;
+                            }
+                        });
+                    } else {
+                        $('input[type=radio][name="pro_id"]:checked').attr("checked", false);
+                        form.render('radio');
+                    }
+
+                    layer.open({
+                        type: 1,
+                        title: "修改配置",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        area: ['600px', '500px'],
+                        btn: ['确定', '取消'],
+                        content: $("#add_config"),
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var key = $("#key").val();
+                            var value = $("#value").val();
+                            var name = $("#name").val();
+                            var description = $("#description").val();
+                            //获取选择的菜单
+                            var pro_id = $('input:radio[name=pro_id]:checked').attr('placeholder');
+                            var re_data = {
+                                config_id: obj.data.id,
+                                key: key,
+                                name: name,
+                                value: value,
+                                description: description,
+                                pro_id: pro_id,
+                            };
+                            $.ajax({
+                                url: '{% url "ResourceCenter:ConfigApi" %}',
+                                data: JSON.stringify(re_data),
+                                cache: false,
+                                async: false,
+                                type: "PUT",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        },
+                        btn2: function () {
+                            document.getElementById("data_form").reset();
+                        }
+                    });
+                }
+            });
+        });
+
+        function openAdd() {
+
+        }
+
+        function closeAdd() {
+            document.getElementById("add_config").style.display = "none";
+            // 页面刷新
+            location.reload();
+        }
+
+        function AddConfig() {
+            var key = $("#key").val();
+            var value = $("#value").val();
+            var name = $("#name").val();
+            var description = $("#description").val();
+            //获取选择的菜单
+            var pro_id = $('input:radio[name=pro_id]:checked').attr('placeholder');
+            var re_data = {
+                key: key,
+                name: name,
+                value: value,
+                description: description,
+                pro_id: pro_id,
+            };
+            $.ajax({
+                url: '{% url "ResourceCenter:ConfigApi" %}',
+                data: JSON.stringify(re_data),
+                cache: false,
+                async: false,
+                type: "POST",
+                dataType: "json",
+                success: function (result) {
+                    if (result.code == 200) {
+                        alert('添加成功');
+                        window.location.reload();
+                    }
+                },
+                error: function (result) {
+                    alert("添加失败：" + result.responseJSON.errMsg);
+                },
+            })
+        }
+    </script>
+{% endblock %}

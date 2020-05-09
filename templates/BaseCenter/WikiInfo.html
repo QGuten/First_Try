@@ -1,0 +1,72 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+{% block css %}
+    <style type="text/css">
+        .docs-info {
+            margin: 20px;
+        }
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">研发文档</a>
+                      <a href="{% url 'BaseCenter:WikiDocsIndex' %}">文档管理</a>
+                      <a><cite>文档详情</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>文档标题：{{ docs_info.title }}</p>
+                    </div>
+                    <div class="layui-row docs-info">
+                        <div class="layui-col-md3">创建人：{{ docs_info.created_by }}</div>
+                    </div>
+                    <div class="layui-row docs-info">
+                        <div class="layui-col-md3">更新人：{{ docs_info.updated_by }}</div>
+                        <div class="layui-col-md3">更新时间：{{ docs_info.updated_at }}</div>
+                    </div>
+                    <div class="layui-row docs-info">
+                        <div class="layui-col-md12">
+                            <fieldset class="layui-elem-field">
+                                <legend>文档内容</legend>
+                                <div class="layui-field-box">
+                                    <div id="markdownToHTML"">
+                                        <textarea id="content" style="display:none;"></textarea>
+                                    </div>
+                                    <div id="docs_info" docs="{{ docs_info.context }}"></div>
+                                    {#                                {{ docs_info.context|safe }}#}
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        window.onload = function () {
+            var docs_info = $("#docs_info").attr("docs");
+            $('#content').val(docs_info);
+            editormd.markdownToHTML("markdownToHTML", {
+                htmlDecode: "style,script,iframe",
+                emoji: true,  // 解析表情
+                taskList: true,  // 解析列表
+                tex: true,  // 默认不解析
+                flowChart: true,  // 默认不解析
+                sequenceDiagram: true  // 默认不解析
+            })
+        };
+
+    </script>
+{% endblock %}

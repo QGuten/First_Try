@@ -1,0 +1,659 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}
+    <style>
+        .my-text {
+            margin: 10px;
+            padding: 10px;
+            color: red;
+        }
+
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="{% url 'JobCenter:JobIndex' %}">任务库</a>
+                        <a href="{% url 'JobCenter:SubJobIndex' %}">任务管理</a>
+                      <a><cite>子任务详情</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- 任务信息 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务信息</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">任务名称</label>
+                            <div class="layui-input-block" style="width: 500px">
+                                <input type="text" name="job_name" id="job_name" value="{{ job_info.job_name }}"
+                                       autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">子任务ID</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="job_id" id="job_id" placeholder="{{ job_info.id }}"
+                                       autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">任务类型</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_num" placeholder="{{ job_info.job_type.param_name }}"
+                                       autocomplete="off" class="layui-input" disabled>
+                            </div>
+                            <label class="layui-form-label">所属项目</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_model" placeholder="{{ job_info.pro.project_name }}"
+                                       autocomplete="off" class="layui-input" disabled>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 任务配置展示 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务配置</p>
+                    </div>
+                    <form class="layui-form" id="job_config">
+                        <script type="text/html" id="bar">
+                            <a class="layui-btn layui-btn-checked layui-btn-xs" lay-event="add">添加</a>
+                            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="del">删除</a>
+                        </script>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">接口域名</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <input type="text" name="job_domain" id="job_domain" autocomplete="off"
+                                       class="layui-input" value="{{ job_info.domain_path }}">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">请求头</label>
+                            <div class="layui-input-block" style="width: 60%" id="re_header">
+                                <div id="re_header_data" data="{{ job_info.header_data }}"></div>
+                                <table class="layui-hide" id="header_table" lay-filter="header_table"></table>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">当前签名</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <select name="auth_select" lay-verify="required" id="auth_select">
+                                    <option value="">不使用验签</option>
+                                    {% for info in autograph_config_list %}
+                                        {% if info.value == job_info.autograph_config %}
+                                            <option value="{{ info.value }}" selected>{{ info.name }}（{{ info.value }}）
+                                            </option>
+                                        {% else %}
+                                            <option value="{{ info.value }}">{{ info.name }}（{{ info.value }}）</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">全局变量</label>
+                            <div class="layui-input-block" style="width: 60%" id="re_global">
+                                <div id="global_list" data="{{ job_info.global_list }}"></div>
+                                <table class="layui-hide" id="global_table" lay-filter="global_table"></table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 前提条件 -->
+        {% if setup_info %}
+            <div class="layui-col-md12" id="setup_show">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <div class="layui-elem-quote">
+                            <p>前提条件</p>
+                        </div>
+                        <div class="layui-text my-text">
+                            请求值填写规则：<br>
+                            1.直接写入请求值，例如：13511110000<br>
+                            2.请求值为缓存池中变量，例如：${变量名}，注：必须按照${变量名}这个格式来填写！！！<br>
+                        </div>
+                        <div class="layui-collapse lay-accordion">
+                            {% for info in setup_info %}
+                                <div class="layui-colla-item">
+                                    <h2 class="layui-colla-title">执行用例ID：<a
+                                            id="{{ info.case_id }}">{{ info.case_id }}（{{ info.case.case_name }}）</a>
+                                    </h2>
+                                    <div class="layui-colla-content layui-show">
+                                        <form class="layui-form" id="re_info">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">用例类型</label>
+                                                <div class="layui-input-block" style="width: 60%">
+                                                    <input type="text" name="case_type" domain_id="" id="case_type"
+                                                           autocomplete="off" disabled
+                                                           class="layui-input"
+                                                           placeholder="{{ info.case.case_type.param_value }}">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">请求域名</label>
+                                                <div class="layui-input-block" style="width: 60%">
+                                                    <input type="text" name="re_domain" domain_id="" id="re_domain"
+                                                           autocomplete="off" placeholder="如不需要单独请求，则不需要填写……"
+                                                           class="layui-input" value="{{ info.domain_path }}">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">执行顺序</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="exe_step" id="exe_step"
+                                                           value="{{ info.exe_step }}" autocomplete="off"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">数据ID</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="data_id" id="data_id"
+                                                           value="{{ info.id }}" autocomplete="off"
+                                                           class="layui-input" disabled>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {% autoescape off %}
+                                                    {% job_data_to_table info.exe_data %}
+                                                {% endautoescape %}
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if case_info %}
+            <!-- 测试用例 -->
+            <div class="layui-col-md12" id="case_show">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <div class="layui-elem-quote">
+                            <p>测试用例</p>
+                        </div>
+                        <div class="layui-text my-text">
+                            请求值填写规则：<br>
+                            1.直接写入请求值，例如：13511110000<br>
+                            2.请求值为缓存池中变量，例如：${变量名}，注：必须按照${变量名}这个格式来填写！！！<br>
+                        </div>
+                        <div class="layui-collapse lay-accordion">
+                            {% for info in case_info %}
+                                <div class="layui-colla-item">
+                                    <h2 class="layui-colla-title">执行用例ID：<a
+                                            id="{{ info.case_id }}">{{ info.case_id }}（{{ info.case.case_name }}）</a>
+                                    </h2>
+                                    <div class="layui-colla-content layui-show">
+                                        <form class="layui-form" id="re_info">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">用例类型</label>
+                                                <div class="layui-input-block" style="width: 60%">
+                                                    <input type="text" name="case_type" id="case_type"
+                                                           autocomplete="off" disabled
+                                                           class="layui-input"
+                                                           placeholder="{{ info.case.case_type.param_value }}">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">请求域名</label>
+                                                <div class="layui-input-block" style="width: 60%">
+                                                    <input type="text" name="re_domain" id="re_domain"
+                                                           autocomplete="off" placeholder="如不需要单独请求，则不需要填写……"
+                                                           class="layui-input" value="{{ info.domain_path }}">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">执行顺序</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="exe_step" id="exe_step"
+                                                           value="{{ info.exe_step }}" autocomplete="off"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">数据ID</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="data_id" id="data_id"
+                                                           value="{{ info.id }}" autocomplete="off"
+                                                           class="layui-input" disabled>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {% autoescape off %}
+                                                    {% job_data_to_table info.exe_data %}
+                                                {% endautoescape %}
+                                            </div>
+                                        </form>
+
+
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <!-- 创建任务页，功能按钮 -->
+        <div class="layui-col-md12" id="job_func">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-radius" data-method="exe_job">执行任务
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        layui.use(['layer', 'form', 'table'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table;
+            //触发事件
+            var active = {
+                exe_job: function () {
+
+                    var index = layer.load();
+
+                    var case_info = [];
+                    var setup_list = [];
+
+                    //获取前提条件列表
+                    $("#setup_show .layui-colla-item").each(function () {
+
+                        //获取执行的用例ID
+                        var case_id = $(this).find("h2 a").attr("id");
+
+                        //获取用例执行的顺序
+                        var exe_step = $(this).find("#exe_step").val();
+
+                        //获取用例执行数据ID
+                        var data_id = $(this).find("#data_id").val();
+
+                        //获取循环获取步骤每一个步骤中的id、请求数据、断言数据
+
+                        var case_step_info = [];
+
+                        $(this).find(".step_info").each(function () {
+
+                            var that = this;
+
+                            var step_id = $(that).find(".layui-input").attr('placeholder');
+
+                            var table = $(that).find(".layui-table");
+
+                            var exe_params = {};
+                            var result = {};
+
+                            for (var i = 0; i < table.length; i++) {
+
+                                var info = {};
+
+                                //console.log(table[i].id);
+
+                                var rows = table[i].rows;
+                                for (var j = 1; j < rows.length; j++) {    //--循环所有的行
+                                    var cells = rows[j].cells;
+                                    var key = cells[0].getElementsByTagName("input")[0].value;
+                                    var value = cells[1].getElementsByTagName("input")[0].value;
+
+                                    if (key != "" && value != "") {
+                                        if (i == 0) {
+                                            exe_params[key] = value;
+                                        } else {
+                                            result[key] = value;
+                                        }
+                                    } else {
+                                        layer.close(index);
+                                        layer.open({
+                                            title: '温馨提示'
+                                            , content: '可输入数据不可为空，请检查顺序或者参数值……'
+                                        })
+                                    }
+                                }
+                                if (table[i].id == "result_table") {
+
+                                    info.step_id = step_id;
+                                    info.data = JSON.stringify({
+                                        exe_params: exe_params,
+                                        result: result,
+                                        save_list: $(this).find("#save_list").val()
+                                    });
+
+                                    case_step_info.push(info);
+                                }
+                            }
+
+                        });
+
+                        var one_case = {
+                            data_id: data_id,
+                            case_id: case_id,
+                            exe_step: exe_step,
+                            domain_path: $(this).find("#re_domain").val(),
+                            //save_list: $(this).find("#save_list").val(),
+                            exe_data: JSON.stringify(case_step_info),
+                        };
+                        //console.log(one_case);
+                        setup_list.push(one_case);
+                    });
+
+
+                    //获取测试用例数据列表
+                    $("#case_show .layui-colla-item").each(function () {
+
+                        //获取执行的用例ID
+                        var case_id = $(this).find("h2 a").attr("id");
+
+                        //获取用例执行的顺序
+                        var exe_step = $(this).find("#exe_step").val();
+
+                        //获取用例执行数据ID
+                        var data_id = $(this).find("#data_id").val();
+
+                        //获取循环获取步骤每一个步骤中的id、请求数据、断言数据
+                        var case_step_info = [];
+
+                        $(this).find(".step_info").each(function () {
+
+                            var that = this;
+
+                            var step_id = $(that).find(".layui-input").attr('placeholder');
+
+                            var table = $(that).find(".layui-table");
+
+                            var exe_params = {};
+                            var result = {};
+
+                            for (var i = 0; i < table.length; i++) {
+
+                                var info = {};
+
+                                //console.log(table[i].id);
+
+                                var rows = table[i].rows;
+                                for (var j = 1; j < rows.length; j++) {    //--循环所有的行
+                                    var cells = rows[j].cells;
+                                    var key = cells[0].getElementsByTagName("input")[0].value;
+                                    var value = cells[1].getElementsByTagName("input")[0].value;
+
+                                    if (key != "" && value != "") {
+                                        if (i == 0) {
+                                            exe_params[key] = value;
+                                        } else {
+                                            result[key] = value;
+                                        }
+                                    } else {
+                                        layer.close(index);
+                                        layer.open({
+                                            title: '温馨提示'
+                                            , content: '可输入数据不可为空，请检查顺序或者参数值……'
+                                        })
+                                    }
+                                }
+                                if (table[i].id == "result_table") {
+
+                                    info.step_id = step_id;
+                                    info.data = JSON.stringify({
+                                        exe_params: exe_params,
+                                        result: result,
+                                        save_list: $(this).find("#save_list").val()
+                                    });
+
+                                    case_step_info.push(info);
+                                }
+                            }
+
+                        });
+
+                        var one_case = {
+                            data_id: data_id,
+                            case_id: case_id,
+                            exe_step: exe_step,
+                            exe_data: JSON.stringify(case_step_info),
+                            domain_path: $(this).find("#re_domain").val(),
+                            //save_list: $(this).find("#save_list").val(),
+                        };
+                        //console.log(one_case);
+                        case_info.push(one_case);
+                    });
+
+
+                    var job_id = $("#job_id").attr('placeholder');
+
+                    var job_name = $("#job_name").val();
+
+                    //拼接header
+                    var header_list = [];
+
+                    for (var h = 0; h < header_table_cache.length; h++) {
+                        var key = header_table_cache[h].field_key;
+                        var value = header_table_cache[h].field_value;
+                        var j = {};
+                        j[key] = value;
+                        header_list.push(j)
+                    }
+
+                    //全局变量
+                    var global_data_list = [];
+                    for (var g = 0; g < global_table_cache.length; g++) {
+                        var key_g = global_table_cache[g].field_key;
+                        var value_g = global_table_cache[g].field_value;
+                        var g_json = {};
+                        g_json[key_g] = value_g;
+                        global_data_list.push(g_json)
+                    }
+
+                    var re_data = {
+                        data_id: job_id,
+                        case_info: case_info,
+                        job_name: job_name,
+                        setup_list: setup_list,
+                        config_info: header_list,
+                        domain_path: $("#job_domain").val(),
+                        global_list: global_data_list,
+                        autograph_config: $("#auth_select").find('option:selected').val()
+                    };
+
+                    $.ajax({
+                        url: '{% url "JobCenter:SubJobApi" %}',
+                        data: JSON.stringify(re_data),
+                        cache: false,
+                        async: false,
+                        type: "PUT",
+                        dataType: "json",
+                        success: function (result) {
+                            if (result.code == 200) {
+                                layer.close(index);
+                                layer.open({
+                                    title: '更新子任务信息'
+                                    , content: '子任务信息更新成功，点击确定开始执行'
+                                    , btn: ['确定']
+                                    , yes: function (index) {
+                                        layer.close(index);
+                                        window.location.href = '{% url "JobCenter:JobIndex" %}';
+                                        $.ajax({
+                                            url: '{% url "JobCenter:ExeJob" %}',
+                                            data: JSON.stringify({job_id: job_id}),
+                                            cache: false,
+                                            async: false,
+                                            type: "POST",
+                                            dataType: "json",
+                                            success: function (result) {
+                                            },
+                                            error: function (result) {
+                                                layer.close(index);
+                                                layer.open({
+                                                    title: '警告'
+                                                    , content: result.responseJSON
+                                                });
+                                            },
+                                        })
+                                    }
+                                });
+                            }
+                        },
+                        error: function (result) {
+                            layer.close(index);
+                            layer.open({
+                                title: '子任务创建结果'
+                                , content: result.responseJSON
+                            });
+                        },
+                    })
+                },
+            };
+
+            $('#job_func .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            var global_table_data;
+
+            try {
+                global_table_data = dataToArray(eval("(" + $("#global_list").attr('data') + ")"));
+            }catch (e) {
+                global_table_data = [{'': ''}]
+            }
+
+            var global_table_cache;
+
+            table.render({
+                elem: '#global_table'
+                , id: 'global_table'
+                , limit: 100
+                , cols: [[
+                    {field: 'field_key', title: '参数名', edit: 'text'}
+                    , {field: 'field_value', title: '参数值', edit: 'text'}
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , data: global_table_data
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    global_table_cache = res.data;
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(global_table)', function (obj) {
+                if (obj.event === 'del') {
+                    if (global_table_cache.length > 1) {
+                        if (obj.tr.data('index') != 0) {
+                            global_table_cache.splice(obj.tr.data('index'), 1);//根据索引删除当前行
+                            table.reload('global_table', {
+                                data: global_table_cache
+                            });
+                        }
+                    } else {
+                        layer.msg('表格最少需要一行', {icon: 3, time: 2000});
+                    }
+                } else if (obj.event === 'add') {
+
+                    global_table_cache.push({
+                        "field_key": ""
+                        , "field_value": ""
+                    });
+
+                    table.reload('global_table', {
+                        data: global_table_cache
+                    });
+                }
+            });
+
+            var header_table_data;
+
+            try {
+                header_table_data = dataToArray(eval("(" + $("#re_header_data").attr('data') + ")"));
+            }catch (e) {
+                header_table_data = [{'': ''}]
+            }
+
+            var header_table_cache;
+
+            table.render({
+                elem: '#header_table'
+                , id: 'header_table'
+                , limit: 100
+                , cols: [[
+                    {field: 'field_key', title: '参数名', edit: 'text'}
+                    , {field: 'field_value', title: '参数值', edit: 'text'}
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , data: header_table_data
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    header_table_cache = res.data;
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(header_table)', function (obj) {
+                if (obj.event === 'del') {
+                    if (header_table_cache.length > 1) {
+                        if (obj.tr.data('index') != 0) {
+                            header_table_cache.splice(obj.tr.data('index'), 1);//根据索引删除当前行
+                            table.reload('header_table', {
+                                data: header_table_cache
+                            });
+                        }
+                    } else {
+                        layer.msg('表格最少需要一行', {icon: 3, time: 2000});
+                    }
+                } else if (obj.event === 'add') {
+
+                    header_table_cache.push({
+                        "field_key": ""
+                        , "field_value": ""
+                    });
+
+                    table.reload('header_table', {
+                        data: header_table_cache
+                    });
+                }
+            });
+        });
+
+        function dataToArray(data) {
+            var dataArrar = [];
+            $.each(data, function (key) {
+                //console.log(key); //获取键值
+                //console.log(data[key]); //获取对应的value
+                for (var g_key in data[key]) {
+                    dataArrar.push({
+                        field_key: g_key,
+                        field_value: data[key][g_key]
+                    });
+                }
+            });
+            return dataArrar
+        }
+
+    </script>
+{% endblock %}

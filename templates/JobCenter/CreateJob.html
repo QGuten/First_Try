@@ -1,0 +1,1025 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}
+    <style>
+        .my-text {
+            margin: 10px;
+            padding: 10px;
+            color: red;
+        }
+
+        .layui-layer-content {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">任务库</a>
+                        <a href="{% url 'JobCenter:JobIndex' %}">任务管理</a>
+                      <a><cite>创建任务</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- 任务基础信息 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务信息</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">任务名称</label>
+                            <div class="layui-input-block" style="width: 500px">
+                                <input type="text" name="job_name" id="job_name" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">任务类型</label>
+                            <div class="layui-input-inline">
+                                {% if job_type %}
+                                    <select name="job_type" lay-verify="required" id="job_type">
+                                        {% for type in job_type %}
+                                            <option value=""></option>
+                                            <option value="{{ type.id }}">{{ type.param_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <input type="text" name="info_errror" id="info_errror" autocomplete="off"
+                                           placeholder="对不起，还未添加任务类型，请先添加" class="layui-input" disabled>
+                                {% endif %}
+                            </div>
+                            <label class="layui-form-label">所属项目</label>
+                            <div class="layui-input-inline">
+                                {% if pro_list %}
+                                    <select name="job_pro" lay-verify="required" id="job_pro">
+                                        {% for type in pro_list %}
+                                            <option value=""></option>
+                                            <option value="{{ type.id }}">{{ type.project_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <input type="text" name="info_errror" id="info_errror" autocomplete="off"
+                                           placeholder="对不起，还未添加任务类型，请先添加" class="layui-input" disabled>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button type="button" data-method="find_case"
+                                        class="layui-btn layui-btn-sm layui-btn-radius layui-btn-warm">添加测试用例
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 任务配置展示 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务配置</p>
+                    </div>
+                    <form class="layui-form" id="job_config">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">接口域名</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <input type="text" name="re_domain" domain_id="" id="re_domain" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button type="button" data-method="add_config"
+                                        class="layui-btn layui-btn-sm layui-btn-radius layui-btn-warm">选择域名
+                                </button>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">请求头</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <script type="text/html" id="headerBar">
+                                    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="add">添加</a>
+                                    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                                </script>
+                                <table id="headerTable" lay-filter="headerTable"></table>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">选择签名</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <select name="auth_select" lay-filter="auth_select" id="auth_select">
+                                    <option value="no">不使用验签</option>
+                                    {% for info in autograph_config_list %}
+                                        <option value="{{ info.value }}">{{ info.name }}（{{ info.value }}）</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">全局变量</label>
+                            <div class="layui-input-block" style="width: 60%">
+                                <script type="text/html" id="globalBar">
+                                    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="add">添加</a>
+                                    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                                </script>
+                                <table id="globalTable" lay-filter="globalTable"></table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 执行前置条件的测试用例 -->
+        <div class="layui-col-md12" style="display: none" id="setup_show">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>前置条件</p>
+                    </div>
+                    <div class="layui-text my-text">
+                        请求值填写规则：<br>
+                        1.直接写入请求值，例如：13511110000<br>
+                        2.请求值为缓存池中变量，例如：${变量名}，注：必须按照${变量名}这个格式来填写！！！<br>
+                    </div>
+                    <div class="layui-collapse" id="setup_list">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 测试用例/用例集合展示 -->
+        <div class="layui-col-md12" style="display: none" id="case_show">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>执行用例</p>
+                    </div>
+                    <div class="layui-text my-text">
+                        请求值填写规则：<br>
+                        1.直接写入请求值，例如：13511110000<br>
+                        2.请求值为缓存池中变量，例如：${变量名}，注：必须按照${变量名}这个格式来填写！！！<br>
+                    </div>
+                    <form class="layui-form" id="exe_case">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">用例数量</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="case_num" id="case_num"
+                                       placeholder="暂未添加" autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="layui-collapse" id="case_list">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 测试用例数据表 -->
+        <div id="re_case" style="display: none">
+            <div style="margin: 10px">
+                <form class="layui-form" id="exe_case">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <select class="layui-form-select" lay-filter="pro_list_2" id="pro_list">
+                                <option value="">请选择所属项目</option>
+                                {% for pro in pro_list %}
+                                    <option value="{{ pro.id }}">{{ pro.project_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="layui-inline">
+                            <select class="layui-form-select" lay-filter="no" id="pro_module_2">
+                                <option value="">请选择所属模块</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <select name="case_search_type" class="layui-form-select" lay-filter="case_search_type"
+                                    id="case_search_type">
+                                <option value="">请选择搜索条件</option>
+                                <option value="id">用例ID</option>
+                                <option value="case_name__contains">用例名称</option>
+                            </select>
+                        </div>
+                        <div class="layui-inline">
+                            <input class="layui-input" name="case_search" id="case_search" autocomplete="off">
+                        </div>
+                        <div class="layui-inline">
+                            <button class="layui-btn" type="button" data-type="reload" data-method="search_case">搜索
+                            </button>
+                        </div>
+                        <div class="layui-inline">
+                            <input type="checkbox" name="if_setup" title="是否添加至前置条件" placeholder="1"
+                                   lay-filter="if_setup">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <table class="layui-hide" id="case_table" lay-filter="case_table"></table>
+        </div>
+        <!-- 创建任务页，功能按钮 -->
+        <div class="layui-col-md12" id="job_func" style="display: none">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-radius" data-method="create_job">
+                        创建任务
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 域名选择框 -->
+        <div id="domain_info" style="display: none">
+            <form class="layui-form" id="fromInfo" action="#" style="margin: 5px">
+                <div class="layui-form-item">
+                    <select name="select_domain" lay-filter="select_domain" id="select_domain">
+                        {% for info in domain_name_list %}
+                            <option id="{{ info.value }}">{{ info.name }}({{ info.value }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        var config_type;
+
+        var case_show;
+
+        var case_num = 0;
+
+        var if_setup;
+
+        layui.use(['layer', 'form', 'table', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, form = layui.form, table = layui.table, element = layui.element;
+
+            var re_data = {};
+            re_data['pro__parent__id__in'] = $("#auto_pro_list").attr('value');
+            //触发事件
+            var active = {
+                find_case: function () {
+                    table.render({
+                        elem: '#case_table'
+                        , url: '/casecenter/api/caseinfo/'
+                        , title: '测试用例数据表'
+                        , id: 'case_table'
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                        , cols: [[
+                            {type: 'checkbox'}
+                            , {field: 'id', title: '用例ID', width: 100}
+                            , {field: 'case_name', title: '用例名称'}
+                            , {field: 'pro_name', title: '模块名称', width: 160}
+                            , {field: 'case_type_name', title: '用例类型', width: 100}
+                        ]]
+                        , response: {
+                            statusName: 'code' //规定数据状态的字段名称，默认：code
+                            , statusCode: 200 //规定成功的状态码，默认：0
+                            , countName: 'count' //规定数据总数的字段名称，默认：count
+                            , dataName: 'results' //规定数据列表的字段名称，默认：data
+                            , msgName: 'errorMsg'
+                        },
+                        page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                            layout: ['count', 'prev', 'page', 'next'] //自定义分页布局
+                            , curr: 1 //设定初始在第 5 页
+                            , groups: 5//只显示 1 个连续页码
+                            , first: false //不显示首页
+                            , last: false //不显示尾页
+                        },
+                    });
+                    layer.open({
+                        type: 1,
+                        title: "选择测试用例",
+                        shadeClose: false,
+                        btn: ['确定'],
+                        shade: 0,
+                        area: ['70%', '80%'],
+                        content: $("#re_case"),
+                        yes: function (index) {
+                            var checkStatus = table.checkStatus('case_table');
+                            var data_length = checkStatus.data.length;
+                            //console.log(data_length); //获取选中行数量，可作为是否有选中行的条件
+                            //console.log(checkStatus.isAll); //表格是否全选
+                            var all_data = checkStatus.data;//获取选中行的数据
+                            //console.log(all_data);
+                            var data_html = '';
+                            for (var i = 0; i < data_length; i++) {
+                                var data = all_data[i];
+                                data_html += '<div class="layui-colla-item"><h2 class="layui-colla-title">' + data.case_name + '<i class="layui-icon layui-colla-icon"></i>';
+                                //data_html += '<a data-method="move_up" class="layui-carousel-right" style="color: red;">上移</a>';
+                                //data_html += '<a data-method="move_down" class="layui-carousel-right" style="color: red;margin-right: 20px">下移</a>';
+                                data_html += '</h2>';
+                                data_html += '<div class="layui-colla-content">';
+                                data_html += '<form class="layui-form" id="exe_case">';
+
+                                //执行顺序编辑
+                                data_html += '<div class="layui-form-item"><label class="layui-form-label">执行顺序</label>';
+                                data_html += '<div class="layui-input-inline">';
+                                data_html += '<input type="text" name="exe_order" id="exe_order" autocomplete="off" class="layui-input">';
+                                data_html += '</div>';
+
+                                //用例ID展示
+                                data_html += '<label class="layui-form-label">用例ID</label>';
+                                data_html += '<div class="layui-input-inline">';
+                                data_html += '<input type="text" name="case_id" id="case_id" placeholder="' + data.id + '" autocomplete="off" class="layui-input" disabled>';
+                                data_html += '</div>';
+                                //执行类型展示
+                                data_html += '<label class="layui-form-label">执行类型</label>';
+                                data_html += '<div class="layui-input-inline">';
+                                data_html += '<input type="text" name="re_type" id="re_type" placeholder="' + data.case_type_name + '" autocomplete="off" class="layui-input" disabled>';
+                                data_html += '</div></div>';
+
+                                if (data.step_list) {
+                                    //执行参数有值，拼接成table
+
+                                    for (var step = 0; step < data.step_list.length; step++) {
+
+                                        //分割说明
+                                        var t = step + 1;
+                                        data_html += '步骤：' + t;
+                                        data_html += '<hr class="layui-bg-green">';
+
+                                        data_html += '<div class="step_info">';
+
+                                        //用例步骤ID
+                                        data_html += '<div class="layui-form-item">';
+                                        data_html += '<label class="layui-form-label">步骤ID</label>';
+                                        data_html += '<div class="layui-input-inline">';
+                                        data_html += '<input type="text" name="case_id" id="case_id" placeholder="' + data.step_list[step].id + '" autocomplete="off" class="layui-input" disabled>';
+                                        data_html += '</div></div>';
+
+                                        //执行参数
+                                        data_html += '<div class="layui-form-item">';
+                                        data_html += '<label class="layui-form-label">执行参数</label>';
+                                        data_html += '<div class="layui-input-block">';
+
+                                        if (data.step_list[step].execute_info) {
+                                            //console.log(2);
+                                            var info = eval(data.step_list[step].execute_info);
+                                            //console.log(info);
+                                            data_html += '<table class="layui-table" id="params_table"><thead><tr><th>字段名</th><th>类型</th><th>是否必填</th><th>值</th><th>描述</th></tr></thead><tbody>';
+                                            //console.log(info.length);
+                                            if (info.length == 0) {
+                                                data_html += '<tr>';
+                                                data_html += '<td colspan="5" style="text-align:center">无请求参数</td>';
+                                                data_html += '</tr>';
+                                            } else {
+                                                for (var field = 0; field < info.length; field++) {
+                                                    //console.log(eval(info[field]));
+                                                    //console.log(info[field]);
+                                                    console.log(info[field].if_must);
+                                                    data_html += '<tr>';
+                                                    data_html += '<td>' + info[field].field_name + '</td>';
+                                                    data_html += '<td>' + info[field].field_type + '</td>';
+                                                    if (info[field].if_must == 1) {
+                                                        data_html += '<td><input type="checkbox" lay-skin="switch" lay-text="是|否" lay-filter="checkboxMust" checked disabled="disabled"></td>';
+                                                    } else {
+                                                        data_html += '<td><input type="checkbox" lay-skin="switch" lay-text="是|否" lay-filter="checkboxMust" disabled="disabled"></td>';
+                                                    }
+                                                    if (info[field].value) {
+                                                        data_html += '<td>' + info[field].value + '</td>';
+                                                    } else {
+                                                        data_html += '<td><input type="text" name="re_num" autocomplete="off" class="layui-input"></td>';
+                                                    }
+                                                    data_html += '<td>' + info[field].field_desc + '</td>';
+                                                    data_html += '</tr>';
+                                                }
+                                            }
+
+                                            data_html += '</tbody></table>';
+
+                                        } else {
+                                            data_html += '<input type="text" name="re_num" placeholder="无" autocomplete="off" class="layui-input" disabled>';
+                                        }
+                                        data_html += '</div></div>';
+                                        //data_html += '</div>';
+
+                                        //预期结果param_info
+                                        data_html += '<div class="layui-form-item">';
+                                        data_html += '<label class="layui-form-label">预期参数</label>';
+                                        data_html += '<div class="layui-input-block">';
+
+                                        if (data.step_list[step].param_info) {
+                                            var result_info = eval(data.step_list[step].param_info);
+                                            //console.log(result_info);
+                                            data_html += '<table class="layui-table" id="result_table"><thead><tr><th>字段名</th><th>类型</th><th>值</th><th>描述</th></tr></thead><tbody>';
+                                            //console.log(result_info.length);
+                                            for (var fff = 0; fff < result_info.length; fff++) {
+                                                //console.log(eval(info[field]));
+                                                data_html += '<tr>';
+                                                data_html += '<td>' + result_info[fff].field_name + '</td>';
+                                                data_html += '<td>' + result_info[fff].field_type + '</td>';
+                                                if (result_info[fff].value) {
+                                                    data_html += '<td>' + result_info[fff].value + '</td>';
+                                                } else {
+                                                    data_html += '<td><input type="text" name="re_num" autocomplete="off" class="layui-input"></td>';
+                                                }
+                                                data_html += '<td>' + result_info[fff].field_desc + '</td>';
+                                                data_html += '</tr>';
+                                            }
+                                            data_html += '</tbody></table>';
+
+                                        } else {
+                                            data_html += '<input type="text" name="re_num" placeholder="无" autocomplete="off" class="layui-input" disabled>';
+                                        }
+                                        data_html += '</div></div>';
+                                        //储存参数列表
+                                        data_html += '<div class="layui-form-item">';
+                                        data_html += '<label class="layui-form-label">储存参数</label>';
+                                        data_html += '<div class="layui-input-block">';
+                                        var save_list = data.step_list[step].save_list;
+                                        if (typeof (save_list) == "undefined" || typeof (save_list) == "null") {
+                                            data_html += '<input type="text" id="save_params" name="save_params" autocomplete="off" class="layui-input">';
+                                        } else {
+                                            data_html += '<input type="text" id="save_params" name="save_params" value="' + data.step_list[step]['save_list'] + '" autocomplete="off" class="layui-input">';
+                                        }
+                                        data_html += '</div></div></div>';
+                                        data_html += '<div class="layui-form-item">';
+                                        data_html += '<div class="layui-input-block">';
+                                        data_html += '<div class="layui-form-mid layui-word-aux">';
+                                        data_html += '请输入该用例步骤执行后需要储存的参数列表，多参数用;分隔开，若储存时，需要更改参数名，请用:更改后的参数名。例如：a:b;c';
+                                        data_html += '</div>';
+                                        data_html += '</div>';
+                                        data_html += '</div>';
+                                    }
+                                } else {
+                                    //执行参数没有值，显示无
+                                    data_html += '<input type="text" name="re_num" placeholder="无" autocomplete="off" class="layui-input" disabled>';
+                                }
+                                data_html += '</div></div>';
+
+                                data_html += '</form></div></div>';
+                            }
+                            if (if_setup == true) {
+                                openFunction();
+                                document.getElementById('setup_show').style.display = 'block';
+                                $("#setup_list").append(data_html);
+                            } else {
+                                openFunction();
+                                case_num += data_length;
+                                $("#case_num").attr('placeholder', case_num);
+                                document.getElementById('case_show').style.display = 'block';
+                                $("#case_list").append(data_html);
+                            }
+                            layer.close(index);
+                            element.render('lay-event');
+                            element.render('lay-filter');
+                        },
+                    })
+                },
+                add_config: function () {
+                    layer.open({
+                        type: 1,
+                        title: "选择请求域名",
+                        shadeClose: false,
+                        btn: ['确定'],
+                        shade: 0,
+                        area: ['600px', '200px'],
+                        content: $("#domain_info"),
+                        yes: function (index) {
+                            var a = $("#select_domain").find("option:selected").val();
+                            //console.log(a);
+                            $("#re_domain").attr('value', a);
+                            layer.close(index);
+                        },
+                    })
+                },
+                reload: function () {
+                    var project_id = $("#pro_module_2  option:selected").attr("value");
+                    var case_name = $("#case_search").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (case_name == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (case_name != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = case_name;
+                    re_data["pro"] = project_id;
+                    re_data['pro__parent__id__in'] = $("#auto_pro_list").attr('value');
+                    console.log(re_data);
+                    table.reload('case_table', {
+                        url: '/casecenter/api/caseinfo/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        },
+                    })
+                },
+                create_job: function () {
+                    var case_info = [];
+                    var setup_list = [];
+
+                    //获取前提条件列表
+                    $("#setup_show .layui-colla-item").each(function () {
+
+                        var case_step_info = [];
+
+                        var exe_order = $(this).find("#exe_order").val();
+
+                        var case_id = $(this).find("#case_id").attr('placeholder');
+
+                        var o = 0;
+
+                        $(this).find(".step_info").each(function () {
+
+                            var that = this;
+
+                            var step_id = $(that).find(".layui-input").attr('placeholder');
+
+                            var table = $(that).find(".layui-table");
+
+                            var exe_params = {};
+                            var result = {};
+
+                            for (var i = 0; i < table.length; i++) {
+
+                                var info = {};
+
+                                //console.log(table[i].id);
+
+                                var rows = table[i].rows;
+
+                                for (var j = 1; j < rows.length; j++) {    //--循环所有的行
+                                    var cells = rows[j].cells;
+                                    var key = cells[0].innerText;
+                                    if (key == "无请求参数") {
+
+                                    } else {
+                                        var a = cells[3].innerText;
+                                        var value;
+                                        if (a != "") {
+                                            value = a;
+                                        } else {
+                                            value = cells[3].getElementsByTagName("input")[0].value;
+                                        }
+                                        // var value = cells[3].getElementsByTagName("input")[0].value;
+                                        if (key != "" && value != "") {
+                                            if (i == 0) {
+                                                exe_params[key] = value;
+                                            } else {
+                                                result[key] = value;
+                                            }
+                                        } else {
+                                            layer.open({
+                                                title: '温馨提示'
+                                                , content: '可输入数据不可为空，请检查顺序或者参数值……'
+                                            })
+                                        }
+                                    }
+                                }
+
+                                if (table[i].id == "result_table") {
+
+                                    info.step_id = step_id;
+                                    info.data = JSON.stringify({
+                                        exe_params: exe_params,
+                                        result: result,
+                                        save_list: $(this).find("#save_params").val()
+                                    });
+
+                                    case_step_info.push(info);
+                                }
+                            }
+
+                            o = o + 1;
+
+                        });
+
+                        var one_case = {
+                            case_id: case_id,
+                            exe_order: exe_order,
+                            exe_data: JSON.stringify(case_step_info),
+                            //save_params: $(this).find("#save_params").val()
+                        };
+                        //console.log(one_case);
+                        setup_list.push(one_case);
+                    });
+
+
+                    //获取测试用例数据列表
+                    $("#case_show .layui-colla-item").each(function () {
+
+                        var case_step_info = [];
+
+                        var exe_order = $(this).find("#exe_order").val();
+                        var case_id = $(this).find("#case_id").attr('placeholder');
+
+                        $(this).find(".step_info").each(function () {
+
+                            var that = this;
+
+                            var step_id = $(that).find(".layui-input").attr('placeholder');
+
+                            var table = $(that).find(".layui-table");
+
+                            var exe_params = {};
+                            var result = {};
+
+                            for (var i = 0; i < table.length; i++) {
+
+                                var info = {};
+
+                                //console.log(table[i].id);
+                                if (table[i].id == "result_table") {
+                                    var rows = table[i].rows;
+                                    for (var j = 1; j < rows.length; j++) {    //--循环所有的行
+                                        var cells = rows[j].cells;
+                                        var key = cells[0].innerText;
+                                        var a = cells[2].innerText;
+                                        var value;
+                                        if (a != "") {
+                                            value = a;
+                                        } else {
+                                            value = cells[2].getElementsByTagName("input")[0].value;
+                                        }
+                                        // var value = cells[3].getElementsByTagName("input")[0].value;
+                                        if (key != "" && value != "") {
+                                            result[key] = value;
+                                        } else {
+                                            layer.open({
+                                                title: '温馨提示'
+                                                , content: '可输入数据不可为空，请检查顺序或者参数值……'
+                                            })
+                                        }
+                                    }
+                                    info.step_id = step_id;
+                                    info.data = JSON.stringify({
+                                        exe_params: exe_params,
+                                        result: result,
+                                        save_list: $(this).find("#save_params").val()
+                                    });
+
+                                    case_step_info.push(info);
+                                } else {
+                                    var rows_2 = table[i].rows;
+                                    //console.log(rows_2);
+                                    for (var j_2 = 1; j_2 < rows_2.length; j_2++) {    //--循环所有的行
+                                        var cells_2 = rows_2[j_2].cells;
+                                        var key_2 = cells_2[0].innerText;
+                                        console.log(key_2);
+                                        if (key_2 == "无请求参数") {
+
+                                        } else {
+                                            var a_2 = cells_2[3].innerText;
+                                            var value_2;
+                                            if (a_2 != "") {
+                                                value_2 = a_2;
+                                            } else {
+                                                value_2 = cells_2[3].getElementsByTagName("input")[0].value;
+                                            }
+                                            // var value = cells[3].getElementsByTagName("input")[0].value;
+                                            if (key_2 != "" && value_2 != "") {
+                                                exe_params[key_2] = value_2;
+                                            } else {
+                                                layer.open({
+                                                    title: '温馨提示'
+                                                    , content: '可输入数据不可为空，请检查顺序或者参数值……'
+                                                })
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        });
+
+                        var one_case = {
+                            case_id: case_id,
+                            exe_order: exe_order,
+                            exe_data: JSON.stringify(case_step_info),
+                            //save_params: $(this).find("#save_params").val()
+                        };
+                        //console.log(one_case);
+                        case_info.push(one_case);
+                    });
+                    //获取任务名称
+                    var job_name = $("#job_name").val();
+                    //任务类型
+                    var job_type = $("#job_type").find('option:selected').val();
+                    //任务所属项目
+                    var job_pro = $("#job_pro").find('option:selected').val();
+                    //获取接口配置信息
+                    var $re_config = $("#job_config");
+                    //接口域名配置id
+                    var domain_info = $re_config.find('input').val();
+                    //拼接header
+                    var header_list = [];
+                    for (var h = 0; h < header_data.length; h++) {
+                        var key = header_data[h].header_key;
+                        var value = header_data[h].header_value;
+                        var j = {};
+                        j[key] = value;
+                        header_list.push(j)
+                    }
+
+                    //全局变量
+                    var global_data_list = [];
+                    for (var g = 0; g < global_data.length; g++) {
+                        var key_g = global_data[g].global_key;
+                        var value_g = global_data[g].global_value;
+                        var g_json = {};
+                        g_json[key_g] = value_g;
+                        global_data_list.push(g_json)
+                    }
+
+                    var re_data = {
+                        job_name: job_name,
+                        job_type: job_type,
+                        job_pro: job_pro,
+                        case_info: case_info,
+                        setup_list: setup_list,
+                        config_info: header_list,
+                        domain_info: domain_info,
+                        global_list: global_data_list,
+                        autograph_config: $("#auth_select").find('option:selected').val()
+                    };
+                    console.log(re_data);
+                    $.ajax({
+                        url: '{% url "JobCenter:JobApi" %}',
+                        data: JSON.stringify(re_data),
+                        cache: false,
+                        async: false,
+                        type: "POST",
+                        dataType: "json",
+                        success: function (result) {
+                            if (result.code == 200) {
+                                layer.open({
+                                    title: '温馨提示'
+                                    , content: '任务创建成功'
+                                    , btn: ['知道了……']
+                                    , yes: function (index) {
+                                        layer.close(index);
+                                        //window.location.href = "/JobCenter/JobInfo/?id=" + result.data;
+                                        window.location.href = '{% url "JobCenter:JobInfo" %}' + '?id=' + result.data;
+                                    }
+                                });
+                            }
+                        },
+                        error: function (result) {
+                            alert(result.responseJSON)
+                        },
+                    });
+                },
+                search_case: function () {
+                },
+            };
+
+            $('#re_info .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#job_config .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#re_case .layui-btn').on('click', function () {
+                var type = $(this).data('type');
+                active[type] ? active[type].call(this) : '';
+            });
+
+            $('job_config .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#case_show a').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#setup_show a').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            $('#job_func .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            var header_data;
+            table.render({
+                elem: '#headerTable'
+                //, toolbar: '#toolbarDemo'
+                , defaultToolbar: []
+                , limit: 100
+                , id: "headerTable"
+                , cols: [[ //表头
+                    {field: 'header_key', title: '字段名称', edit: 'text'}
+                    , {field: 'header_value', title: '字段值', edit: 'text'}
+                    , {title: '操作', align: '操作', width: 120, toolbar: '#headerBar'}
+                ]]
+                , data: [{
+                    "header_key": ""
+                    , "header_value": ""
+                }]
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    header_data = res.data;
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(headerTable)', function (obj) {
+                if (obj.event === 'del') {
+                    if (header_data.length > 1) {
+                        header_data.splice(obj.tr.data('index'), 1);//根据索引删除当前行
+                        table.reload('headerTable', {
+                            data: header_data
+                        });
+                    } else {
+                        layer.msg('表格最少需要一行', {icon: 3, time: 2000});
+                    }
+                } else if (obj.event === 'add') {
+
+                    header_data.push({
+                        "header_key": ""
+                        , "header_value": ""
+                    });
+
+                    table.reload('headerTable', {
+                        data: header_data
+                    });
+                }
+            });
+            var global_data;
+            table.render({
+                elem: '#globalTable'
+                //, toolbar: '#toolbarDemo'
+                , defaultToolbar: []
+                , limit: 100
+                , id: "globalTable"
+                , cols: [[ //表头
+                    {field: 'global_key', title: '字段名称', edit: 'text'}
+                    , {field: 'global_value', title: '字段值', edit: 'text'}
+                    , {title: '操作', align: '操作', width: 120, toolbar: '#globalBar'}
+                ]]
+                , data: [{
+                    "global_key": ""
+                    , "global_value": ""
+                }]
+                , done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    global_data = res.data;
+                }
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(globalTable)', function (obj) {
+                if (obj.event === 'del') {
+                    if (global_data.length > 1) {
+                        if (obj.tr.data('index') != 0) {
+                            global_data.splice(obj.tr.data('index'), 1);//根据索引删除当前行
+                            table.reload('globalTable', {
+                                data: global_data
+                            });
+                        }
+                    } else {
+                        layer.msg('表格最少需要一行', {icon: 3, time: 2000});
+                        //layer.confirm('表格最少需要一行！', {icon: 3, title: '温馨提示'}, function (index) {
+                        //    //do something
+                        //    layer.close(index);
+                        //});
+                    }
+                } else if (obj.event === 'add') {
+
+                    global_data.push({
+                        "global_key": ""
+                        , "global_value": ""
+                    });
+
+                    table.reload('globalTable', {
+                        data: global_data
+                    });
+                }
+            });
+
+            //绑定select监听
+            //form.on('select(select_domain)', function (data) {
+            //    var id = $(data.elem).find("option:selected").attr("id");
+                //$("#re_domain").attr('domain_id', id);
+                //$("#re_domain").attr('value', data.value);
+                //$("#re_domain").attr('value', id);
+            //});
+            //绑定radio监听
+            form.on('checkbox(if_setup)', function (data) {
+                if_setup = data.elem.checked;
+                //console.log(if_setup);
+            });
+
+            var if_auth = true;
+
+            //绑定select监听
+            form.on('select(auth_select)', function (data) {
+                if (data.value === 'Sign') {
+                    if (if_auth) {
+                        if (header_data[header_data.length - 1].header_key) {
+                            header_data.push(
+                                {"header_key": "bt-auth-appkey", "header_value": ""},
+                                {"header_key": "bt-auth-nonce", "header_value": ""},
+                            );
+                        } else {
+                            header_data[header_data.length - 1].header_key = "bt-auth-appkey";
+                            header_data.push(
+                                {"header_key": "bt-auth-nonce", "header_value": ""},
+                            );
+                        }
+                        table.reload('headerTable', {
+                            data: header_data
+                        });
+                        if_auth = false;
+                    }
+
+                }
+            });
+
+            form.on('select(pro_list_2)', function (data) {
+                var pro_id = data.value;
+                var re_data = {
+                    parent_id: pro_id,
+                    abandon_flag: 1,
+                };
+                //console.log(pro_id); //复选框value值，也可以通过data.elem.value得到
+                $.ajax({
+                    url: '{% url "BaseCenter:ProjectApi" %}',
+                    data: {
+                        search_data: JSON.stringify(re_data)
+                    },
+                    cache: false,
+                    async: false,
+                    type: "POST",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            var info = result.data;
+                            //console.log(info);
+
+                            var strs = '';
+
+                            for (let i = 0; i < info.length; i++) {
+                                strs += '<option value = "' + info[i].id + '">' + info[i].project_name + '</option>';
+                            }
+                            $("#pro_module_2").html(strs);
+                        }
+                        form.render('select');
+                    },
+                    error: function (result) {
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON,
+                            btn: ['知道了……'],
+                            yes: function () {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                    ,
+                })
+            });
+
+            //table.on('checkbox(case_table)', function (obj) {
+            //    console.log(obj.checked); //当前是否选中状态
+            //    console.log(obj.data); //选中行的相关数据
+            //    console.log(obj.type); //如果触发的是全选，则为：all，如果触发的是单选，则为：one
+            //});
+        });
+
+    </script>
+
+    <script type="application/javascript">
+
+        function openFunction() {
+            document.getElementById('job_func').style.display = 'block';
+        }
+    </script>
+{% endblock %}

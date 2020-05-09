@@ -1,0 +1,187 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">用例库</a>
+                        <a href="{% url 'CaseCenter:SuiteIndex' %}">集合管理</a>
+                      <a><cite>集合详情</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>集合名称：{{ suite_info.suite_name }}</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">集合ID</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_id" id="suite_id" placeholder="{{ suite_info.id }}"
+                                       autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                            <label class="layui-form-label">用例类型</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_num" placeholder="{{ suite_info.case_type.param_name }}"
+                                       autocomplete="off" class="layui-input" disabled>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">所属模块</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_model" placeholder="{{ suite_info.pro.project_name }}"
+                                       autocomplete="off" class="layui-input" disabled>
+                            </div>
+                            <label class="layui-form-label">所属项目</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_pro"
+                                       placeholder="{{ suite_info.pro.parent.project_name }}" autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-collapse">
+                        {% for info in step_all %}
+                            <div class="layui-colla-item" lay-accordion>
+                                <h2 class="layui-colla-title">{{ info.case_name }}</h2>
+                                <div class="layui-colla-content">
+                                    {% for step in info.step_list %}
+                                        <span>执行顺序：{{ step.step_id }}</span>
+                                        <hr class="layui-bg-orange">
+                                        <form class="layui-form" id="re_info">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">执行类型</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="re_id" id="suite_id"
+                                                           placeholder="{{ step.execute_type }}" autocomplete="off"
+                                                           class="layui-input" disabled>
+                                                </div>
+                                                <label class="layui-form-label">校验方式</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="re_id" id="suite_id"
+                                                           placeholder="{{ step.check_type }}" autocomplete="off"
+                                                           class="layui-input" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">执行参数</label>
+                                                <div class="layui-input-block">
+                                                    <div id="re_params" data="{{ step.execute_info }}"></div>
+                                                <div class="layui-table-box">
+                                                    <table class="layui-hide" id="params_table" lay-filter="params_table"></table>
+                                                </div>
+{#                                                    {% if step.execute_info != '无' %}#}
+{#                                                        {% autoescape off %}#}
+{#                                                            {% execute_info_table step.execute_info %}#}
+{#                                                        {% endautoescape %}#}
+{#                                                    {% else %}#}
+{#                                                        <input type="text" name="re_num"#}
+{#                                                               placeholder="{{ step.execute_info }}"#}
+{#                                                               autocomplete="off" class="layui-input" disabled>#}
+{#                                                    {% endif %}#}
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">预期参数</label>
+                                                <div class="layui-input-block">
+                                                    <div id="re_response" data="{{ step.param_info }}"></div>
+                                                <div class="layui-table-box">
+                                                    <table class="layui-hide" id="response_table"
+                                                           lay-filter="response_table"></table>
+                                                </div>
+{#                                                    {% if step.execute_info != '无' %}#}
+{#                                                        {% autoescape off %}#}
+{#                                                            {% param_info_table step.param_info %}#}
+{#                                                        {% endautoescape %}#}
+{#                                                    {% else %}#}
+{#                                                        <input type="text" name="re_num"#}
+{#                                                               placeholder="{{ step.param_info }}"#}
+{#                                                               autocomplete="off" class="layui-input" disabled>#}
+{#                                                    {% endif %}#}
+                                                </div>
+                                            </div>
+                                        </form>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+    layui.use(['layer', 'table', 'form'], function () {
+
+        var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form;
+
+        var table_1 = table.render({
+                elem: '#params_table'
+                //, data: JSON.parse($("#re_params").attr('data'))
+                , data: eval("(" + $("#re_params").attr('data') + ")")
+                , id: 'params_table'
+                , cols: [[
+                    {field: 'field_name', title: '字段名称'}
+                    //, {field: 'field_type', title: '字段类型', templet:'#selectTool'}
+                    , {field: 'field_type', title: '字段类型'}
+                    , {
+                        field: 'if_must', title: '必填', templet: function (res) {
+                            if (res.if_must == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="是|否" lay-filter="checkboxMust" checked disabled="disabled">'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="是|否" lay-filter="checkboxMust" disabled="disabled">'
+                            }
+                        }
+                    }
+                    , {field: 'value', title: '固定值', templet: function (res) {
+                        if(res.value){
+                            return res.value
+                        }
+                            return ''
+                        }}
+                    , {field: 'field_desc', title: '字段描述'}
+                    //, {title: '操作', align: '操作', toolbar: '#bar'}
+                ]]
+            });
+            var table_2 = table.render({
+                elem: '#response_table'
+                //, data: JSON.parse($("#re_response").attr('data'))
+                , data: eval("(" + $("#re_response").attr('data') + ")")
+                , id: 'response_table'
+                , cols: [[
+                    {field: 'field_name', title: '字段名称'}
+                    //, {field: 'field_type', title: '字段类型'}
+                    , {field: 'field_type', title: '字段类型'}
+                    , {field: 'value', title: '固定值', templet: function (res) {
+                        if(res.value){
+                            return res.value
+                        }
+                            return ''
+                        }}
+                    //, {field: 'field_desc', title: '字段描述', edit: 'text'}
+                    , {field: 'field_desc', title: '字段描述'}
+                    //, {title: '操作', align: '操作', toolbar: '#re_bar'}
+                ]]
+            });
+    })
+    </script>
+    <script type="text/javascript">
+
+    </script>
+{% endblock %}

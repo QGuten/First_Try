@@ -1,0 +1,63 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                        <a href="{% url 'JobCenter:JobIndex' %}">系统任务</a>
+                        <a><cite>接口文档解析任务详情</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- 任务信息 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务名称：{{ job_info.name }}</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">创建人</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="re_id" id="re_id" placeholder="{{ job_info.created_by }}"
+                                       autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 任务执行记录 -->
+        <div class="layui-col-md12" id="tips" style="display: block">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-collapse lay-accordion">
+                        {% for info in job_record %}
+
+                            {% if info.explain != '无' %}
+                                {% autoescape off %}
+                                    {% show_job_record_info info.explain %}
+                                {% endautoescape %}
+                            {% else %}
+                                <input type="text" name="re_num"
+                                       placeholder="{{ info.param_info }}"
+                                       autocomplete="off" class="layui-input" disabled>
+                            {% endif %}
+
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+    </script>
+{% endblock %}

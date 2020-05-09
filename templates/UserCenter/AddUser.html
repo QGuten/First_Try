@@ -1,0 +1,183 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="{% url 'UserCenter:UserIndex' %}">用户管理</a>
+                      <a><cite>添加用户</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+                        <legend>输入用户信息</legend>
+                    </fieldset>
+                    <form class="layui-form" id="UserInfo">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">登录用户名</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="username" id="username" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">登录密码</label>
+                                <div class="layui-input-inline">
+                                    <input type="password" name="password" id="password" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">姓氏</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="last_name" id="last_name" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">名字</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="first_name" id="first_name" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">手机号码</label>
+                                <div class="layui-input-inline">
+                                    <input type="tel" name="mobile_no" id="mobile_no" lay-verify="required|phone"
+                                           autocomplete="off"
+                                           class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">邮箱</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="email" id="email" lay-verify="email" autocomplete="off"
+                                           class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">所属部门</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="department" id="department" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">选择角色</label>
+                            {% if RoleList %}
+                                <div class="layui-input-block">
+                                    {% for role in RoleList %}
+                                        <input type="checkbox" name="role" title="{{ role.title }}"
+                                               placeholder="{{ role.id }}">
+                                        <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                            <span>{{ role.title }}</span><i
+                                                class="layui-icon layui-icon-ok"></i></div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">选择项目</label>
+                            {% if pro_list %}
+                                <div class="layui-input-block">
+                                    {% for pro in pro_list %}
+                                        <input type="checkbox" name="pros" title="{{ pro.project_name }}"
+                                               placeholder="{{ pro.id }}">
+                                        <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                            <span>{{ pro.project_name }}</span><i
+                                                class="layui-icon layui-icon-ok"></i></div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button class="layui-btn" type="button" onclick="AddUser()">立即提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script type="application/javascript">
+        function AddUser() {
+            var username = $("#username").val();
+            var last_name = $("#last_name").val();
+            var first_name = $("#first_name").val();
+            var mobile_no = $("#mobile_no").val();
+            var email = $("#email").val();
+            var department = $("#department").val();
+            var password = $("#password").val();
+            //获取选择角色
+            var all_roles = $("input:checkbox[name='role']:checked");
+            var role_list = [];
+            if (all_roles.length == 0) {
+                alert("请至少勾选一个用户角色");
+                return;
+            } else {
+                all_roles.each(function () {
+                    role_list.push($(this).attr('placeholder'))
+                });
+            }
+            //获取选择项目
+            var all_pros = $("input:checkbox[name='pros']:checked");
+            var pro_list = [];
+            if (all_pros.length == 0) {
+                alert("请至少勾选一个用户权限");
+                return;
+            } else {
+                all_pros.each(function () {
+                    pro_list.push($(this).attr('placeholder'))
+                });
+            }
+            var data_info = {
+                username: username,
+                last_name: last_name,
+                first_name: first_name,
+                mobile_no: mobile_no,
+                email: email,
+                department: department,
+                roles: role_list,
+                pros: pro_list,
+                password: password,
+            };
+            console.log(data_info);
+            $.ajax({
+                url: '{% url "UserCenter:AddUser" %}',
+                data: JSON.stringify(data_info),
+                cache: false,
+                async: false,
+                type: "POST",
+                dataType: "json",
+                success: function (result) {
+                    if (result.code == 200) {
+                        alert('新增成功');
+                        window.location.href = '{% url "UserCenter:UserIndex" %}'
+                    }
+                },
+                error: function (result) {
+                    alert(result.responseJSON)
+                },
+            });
+
+        }
+    </script>
+{% endblock %}

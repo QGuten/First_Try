@@ -1,0 +1,752 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">项目配置</a>
+                      <a><cite>项目配置</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <form class="layui-form" id="data_form">
+                <div class="layui-card">
+                    <div class="layui-card-body" id="config_list">
+                        <div class="layui-tab layui-tab-card">
+                            <ul class="layui-tab-title">
+                                <li class="layui-this">项目配置</li>
+                                <li>版本配置</li>
+                            </ul>
+                            <div class="layui-tab-content">
+                                <div class="layui-tab-item layui-show">
+                                    <div class="layui-form-item" style="margin-top: 10px">
+                                        <div class="layui-inline">
+                                            <button class="layui-btn layui-btn-normal" type="button"
+                                                    data-method="roleset">新增项目
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="layui-form-item">
+                                        <div class="layui-inline">
+                                            <select name="case_search_type" class="layui-form-select"
+                                                    lay-filter="case_search_type"
+                                                    id="case_search_type">
+                                                <option value="">请选择搜索条件</option>
+                                                <option value="id">配置ID</option>
+                                                <option value="project_name__contains">项目名称</option>
+                                                <option value="parent__project_name__contains">父级名称</option>
+                                                <option value="project_type__contains">项目类型</option>
+                                                <option value="project_code__contains">项目code</option>
+                                                {#                                    <option value="pro">模块名称</option>#}
+                                                {#                                    <option value="case_type">用例类型</option>#}
+                                            </select>
+                                        </div>
+                                        <div class="layui-inline">
+                                            <input class="layui-input" name="search_data" id="search_data"
+                                                   autocomplete="off">
+                                        </div>
+                                        <div class="layui-inline">
+                                            <button class="layui-btn" type="button" data-type="reload"
+                                                    data-method="search_case">搜索
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                    <script type="text/html" id="bar">
+                                        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">编辑</a>
+                                    </script>
+                                    <table class="layui-hide" id="case_table" lay-filter="case_table"></table>
+
+                                    <div id="per_list" style="display: none;">
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">项目名称</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="project_name" id="project_name"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">项目类型</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="project_type" id="project_type"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">项目code</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="project_code" id="project_code"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">描述</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="description" id="description"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <label class="layui-form-label">选择项目</label>
+                                            {% if project_list %}
+                                                <div class="layui-input-block">
+                                                    {% for info in project_list %}
+                                                        {% if info.parent %}
+                                                        {% else %}
+                                                            <input type="radio" name="project_parent"
+                                                                   value="{{ info.project_name }}"
+                                                                   title="{{ info.project_name }}"
+                                                                   placeholder="{{ info.id }}">
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="layui-input-block">
+                                                    <span>还没有可选择的项目，请先添加项目</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-tab-item">
+                                    <script type="text/html" id="toolbarDemo">
+                                        <div class="layui-btn-container">
+                                            <button type="button" class="layui-btn layui-btn-sm layui-btn-warm"
+                                                    lay-event="add">增加
+                                            </button>
+                                        </div>
+                                    </script>
+                                    <script type="text/html" id="bar-v">
+                                        <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="info">编辑</a>
+                                    </script>
+                                    <table class="layui-hide" id="version_table" lay-filter="version_table"></table>
+                                    <div id="version_info" style="display: none;">
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">版本号</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="ver_num" id="ver_num"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item" style="margin-top: 20px">
+                                            <div class="layui-inline">
+                                                <label class="layui-form-label">描述</label>
+                                                <div class="layui-input-inline">
+                                                    <input type="text" name="ver_desc" id="ver_desc"
+                                                           class="layui-input">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-form-item">
+                                            <label class="layui-form-label">选择项目</label>
+                                            {% if project_list %}
+                                                <div class="layui-input-block">
+                                                    {% for info in project_list %}
+                                                        {% if info.parent %}
+                                                        {% else %}
+                                                            <input type="radio" name="ver_project_parent"
+                                                                   value="{{ info.project_name }}"
+                                                                   title="{{ info.project_name }}"
+                                                                   placeholder="{{ info.id }}">
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="layui-input-block">
+                                                    <span>还没有可选择的项目，请先添加项目</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        layui.use(['layer', 'form', 'table', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form, element = layui.element;
+            //触发事件
+            var active = {
+                roleset: function () {
+                    layer.open({
+                        type: 1,
+                        title: "新增项目",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        area: ['600px', '500px'],
+                        content: $("#per_list"),
+                        btn: ['确定', '取消'],
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var project_name = $("#project_name").val();
+                            var project_type = $("#project_type").val();
+                            var project_code = $("#project_code").val();
+                            var description = $("#description").val();
+                            //获取选择的菜单
+                            var parent_id = $('input:radio[name=project_parent]:checked').attr('placeholder');
+                            var re_data = {
+                                project_name: project_name,
+                                project_type: project_type,
+                                project_code: project_code,
+                                description: description,
+                                parent_id: parent_id,
+                            };
+                            $.ajax({
+                                url: '{% url "BaseCenter:ProjectApi" %}',
+                                data: JSON.stringify(re_data),
+                                cache: false,
+                                async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '添加结果'
+                                            , content: '添加成功'
+                                        });
+                                        window.location.reload();
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.closeAll();
+                                    layer.open({
+                                        title: '添加结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                    //$('input[type=radio][name="project_parent"]:checked').attr("checked", false);
+                                    //form.render('radio');
+                                    //$("#project_name").html("");
+                                    //$("#project_type").html("");
+                                    //$("#project_code").html("");
+                                    //$("#description").html("");
+                                    //form.render();
+                                }
+                            });
+                        },
+                        btn2: function (index) {
+                            $('input[type=radio][name="project_parent"]:checked').attr("checked", false);
+                            form.render('radio');
+                            $("#project_name").attr('value', '');
+                            $("#project_type").attr('value', '');
+                            $("#project_code").attr('value', '');
+                            $("#description").attr('value', '');
+                            layer.close(index);
+                        }
+                    })
+                },
+                search_case: function () {
+                    var search_data = $("#search_data").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (search_data == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (search_data != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = search_data;
+                    console.log(re_data);
+                    table.reload('case_table', {
+                        url: '/basecenter/api/project/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                    })
+                },
+            };
+
+            $('#config_list .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            //监听工具条删除按钮
+            table.on('tool(case_table)', function (obj) {
+                if (obj.event === 'info') {
+                    $("#project_name").attr('value', obj.data.project_name);
+                    $("#project_type").attr('value', obj.data.project_type);
+                    $("#project_code").attr('value', obj.data.project_code);
+                    $("#description").attr('value', obj.data.description);
+                    //console.log(obj.data.parent_name);
+                    if (obj.data.parent_name) {
+                        $.each($('input:radio[name="project_parent"]'), function (index, value) {
+                            //console.log(value.value);
+                            if (value.value == obj.data.parent_name) {
+                                //console.log('两个变量一致');
+                                $(value).prop('checked', true);
+                                form.render('radio');
+                                return false;
+                            }
+                        });
+                    } else {
+                        $('input[type=radio][name="project_parent"]:checked').attr("checked", false);
+                        form.render('radio');
+                    }
+                    layer.open({
+                        type: 1,
+                        title: "修改项目",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        area: ['500px', '500px'],
+                        content: $("#per_list"),
+                        btn: ['确定', '取消'],
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var project_name = $("#project_name").val();
+                            var project_type = $("#project_type").val();
+                            var project_code = $("#project_code").val();
+                            var description = $("#description").val();
+                            //获取选择的菜单
+                            var parent_id = $('input:radio[name="project_parent"]:checked').attr('placeholder');
+                            //console.log(parent_id);
+                            $.ajax({
+                                url: '{% url "BaseCenter:ProjectApi" %}',
+                                data: JSON.stringify({
+                                    project_id: obj.data.id,
+                                    project_name: project_name,
+                                    project_type: project_type,
+                                    project_code: project_code,
+                                    description: description,
+                                    parent_id: parent_id
+                                }),
+                                cache: false,
+                                async: false,
+                                type: "PUT",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        },
+                        btn2: function (index) {
+                            $('input[type=radio][name="project_parent"]:checked').attr("checked", false);
+                            form.render('radio');
+                            $("#project_name").attr('value', '');
+                            $("#project_type").attr('value', '');
+                            $("#project_code").attr('value', '');
+                            $("#description").attr('value', '');
+                            layer.close(index);
+                        }
+                    })
+                }
+            });
+
+            var table_cache;
+
+            table.render({
+                elem: '#case_table'
+                , url: '/basecenter/api/project/'
+                , title: '系统项目配置表'
+                , id: 'case_table'
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 100}
+                    , {field: 'project_name', title: '项目名称'}
+                    , {field: 'parent_name', title: '父级项目'}
+                    , {field: 'project_type', title: '项目类型', width: 100}
+                    //, {field: 'project_code', title: '项目code', width: 200}
+                    //, {field: 'description', title: '项目描述'}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 100, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                            }
+                        }
+                    }
+                    , {field: 'updated_at', title: '操作时间', width: 150}
+                    , {field: 'updated_by', title: '操作人', width: 100}
+                    , {title: '操作', align: '操作', toolbar: '#bar', width: 100}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    table_cache = res.results;
+                }
+            });
+
+            form.on('switch(Enable)', function (data) {
+                //这里是当选择一个下拉选项的时候 把选择的值赋值给表格的当前行的缓存数据 否则提交到后台的时候下拉框的值是空的
+                var elem = data.othis.parents('tr');
+                var dataindex = elem.attr("data-index");
+                var sys_id;
+                var abandon_flag;
+                //console.log(dataindex);
+                if (elem.find("input:checkbox").is(':checked')) {
+                    abandon_flag = 1;
+                    //console.log('启用');
+                } else {
+                    abandon_flag = 0;
+                    //console.log('禁用');
+                }
+                $.each(table_cache, function (index, value) {
+                    if (value.LAY_TABLE_INDEX == dataindex) {
+                        sys_id = value.id
+                    }
+                });
+                var load_index = layer.load();
+                $.ajax({
+                    url: '{% url "BaseCenter:ProjectApi" %}',
+                    data: JSON.stringify({
+                        project_id: sys_id,
+                        abandon_flag: abandon_flag,
+                    }),
+                    cache: false,
+                    async: false,
+                    type: "PUT",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            layer.close(load_index);
+                            layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                //do something
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.close(load_index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: result.responseJSON.errMsg
+                            });
+                        }
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON.errMsg
+                        });
+                    },
+                })
+            });
+
+            var ver_table_cache;
+
+            table.render({
+                elem: '#version_table'
+                , url: '/basecenter/api/version/'
+                , title: '版本号配置表'
+                , id: 'version_table'
+                , toolbar: '#toolbarDemo'
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 40}
+                    , {field: 'pro', title: '所属项目', width: 120}
+                    , {field: 'type', title: '版本号'}
+                    //, {field: 'description', title: '描述'}
+                    , {
+                        field: 'abandon_flag', title: '状态', width: 80, templet: function (res) {
+                            if (res.abandon_flag == 1) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable-1" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable-1">'
+                            }
+                        }
+                    }
+                    , {field: 'created_at', title: '创建时间', width: 150}
+                    , {field: 'updated_at', title: '更新时间', width: 150}
+                    , {field: 'created_by', title: '创建人', width: 100}
+                    , {field: 'updated_by', title: '更新人', width: 100}
+                    , {title: '操作', align: '操作', toolbar: '#bar-v', width: 50}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    ver_table_cache = res.results;
+                }
+            });
+
+            //监听事件
+            table.on('toolbar(version_table)', function (obj) {
+                if (obj.event === 'add') {
+                    //version_info
+                    layer.open({
+                        type: 1,
+                        title: "新增版本",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        //area: ['600px', '400px'],
+                        content: $("#version_info"),
+                        btn: ['确定', '取消'],
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var ver_num = $("#ver_num").val();
+                            var description = $("#ver_desc").val();
+                            //获取选择的菜单
+                            var parent_id = $('input:radio[name="ver_project_parent"]:checked').attr('placeholder');
+                            var re_data = {
+                                type: ver_num,
+                                description: description,
+                                pro_id: parent_id,
+                            };
+                            $.ajax({
+                                url: '{% url "BaseCenter:ProjectVersionApi" %}',
+                                data: JSON.stringify(re_data),
+                                cache: false,
+                                async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.closeAll();
+                                        layer.open({
+                                            title: '添加结果'
+                                            , content: '添加成功'
+                                        });
+                                        window.location.reload();
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.closeAll();
+                                    layer.open({
+                                        title: '添加结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        },
+                        btn2: function (index) {
+                            $('input[type=radio][name="ver_project_parent"]:checked').attr("checked", false);
+                            form.render('radio');
+                            $("#ver_num").attr('value', '');
+                            $("#ver_desc").attr('value', '');
+                            layer.close(index);
+                        }
+                    })
+                }
+
+            });
+
+            table.on('tool(version_table)', function (obj) {
+                if (obj.event === 'info') {
+                    $("#ver_num").attr('value', obj.data.type);
+                    $("#ver_desc").attr('value', obj.data.description);
+                    //console.log(obj.data.parent_name);
+                    if (obj.data.pro) {
+                        $.each($('input:radio[name="ver_project_parent"]'), function (index, value) {
+                            //console.log(value.value);
+                            if (value.value == obj.data.pro) {
+                                //console.log('两个变量一致');
+                                $(value).prop('checked', true);
+                                form.render('radio');
+                                return false;
+                            }
+                        });
+                    } else {
+                        $('input[type=radio][name="ver_project_parent"]:checked').attr("checked", false);
+                        form.render('radio');
+                    }
+                    layer.open({
+                        type: 1,
+                        title: "修改版本",
+                        shadeClose: false,
+                        closeBtn: true,
+                        shade: 0,
+                        //area: ['500px', '500px'],
+                        content: $("#version_info"),
+                        btn: ['确定', '取消'],
+                        yes: function (index) {
+                            layer.close(index);
+                            var load_index = layer.load();
+                            var info = $("#ver_num").val();
+                            var ver_desc = $("#ver_desc").val();
+                            //获取选择的菜单
+                            var pro_id = $('input:radio[name="ver_project_parent"]:checked').attr('placeholder');
+                            //console.log(parent_id);
+                            $.ajax({
+                                url: '{% url "BaseCenter:ProjectVersionApi" %}',
+                                data: JSON.stringify({
+                                    id: obj.data.id,
+                                    info: info,
+                                    description: ver_desc,
+                                    pro_id: pro_id
+                                }),
+                                cache: false,
+                                async: false,
+                                type: "PUT",
+                                dataType: "json",
+                                success: function (result) {
+                                    if (result.code == 200) {
+                                        layer.close(load_index);
+                                        layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        layer.close(load_index);
+                                        layer.open({
+                                            title: '更新结果'
+                                            , content: result.responseJSON.errMsg
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(load_index);
+                                    layer.open({
+                                        title: '更新结果'
+                                        , content: result.responseJSON.errMsg
+                                    });
+                                },
+                                complete: function () {
+                                    document.getElementById("data_form").reset();
+                                }
+                            })
+                        },
+                        btn2: function (index) {
+                            $('input[type=radio][name="project_parent"]:checked').attr("checked", false);
+                            form.render('radio');
+                            $("#project_name").attr('value', '');
+                            $("#project_type").attr('value', '');
+                            layer.close(index);
+                        }
+                    })
+                }
+            });
+
+            form.on('switch(Enable-1)', function (data) {
+                var elem = data.othis.parents('tr');
+                var dataindex = elem.attr("data-index");
+                var sys_id;
+                var abandon_flag;
+                //console.log(dataindex);
+                if (elem.find("input:checkbox").is(':checked')) {
+                    abandon_flag = 1;
+                    //console.log('启用');
+                } else {
+                    abandon_flag = 0;
+                    //console.log('禁用');
+                }
+                $.each(ver_table_cache, function (index, value) {
+                    if (value.LAY_TABLE_INDEX == dataindex) {
+                        sys_id = value.id
+                    }
+                });
+                var load_index = layer.load();
+                $.ajax({
+                    url: '{% url "BaseCenter:ProjectVersionApi" %}',
+                    data: JSON.stringify({
+                        id: sys_id,
+                        abandon_flag: abandon_flag,
+                    }),
+                    cache: false,
+                    async: false,
+                    type: "PUT",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            layer.close(load_index);
+                            layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                //do something
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.close(load_index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: result.responseJSON.errMsg
+                            });
+                        }
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON.errMsg
+                        });
+                    },
+                })
+            });
+        });
+    </script>
+{% endblock %}

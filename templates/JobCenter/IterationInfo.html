@@ -1,0 +1,477 @@
+{% extends 'layout/base.html' %}
+{% load PermissionTags %}
+{% block css %}
+    <style>
+        .layui-layer-content {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+    </style>
+{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">任务库</a>
+                        <a href="{% url 'JobCenter:IterationIndex' %}">迭代管理</a>
+                      <a><cite>迭代详情</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- 创建迭代页，迭代信息展示 -->
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>迭代信息</p>
+                    </div>
+                    <form class="layui-form" id="re_info">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">迭代名称</label>
+                            <div class="layui-input-block" style="width: 500px">
+                                <input type="text" value="{{ data_info.name }}" id="it_name" autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">迭代ID</label>
+                            <div class="layui-input-block" style="width: 500px">
+                                <input type="text" value="{{ data_info.id }}" id="it_id" autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">所属项目</label>
+                            <div class="layui-input-inline">
+                                {% if pro_list %}
+                                    <select lay-verify="required" id="job_pro" lay-filter="job_pro" disabled>
+                                        {% for type in pro_list %}
+                                            {% if type.id == data_info.pro.id %}
+                                                <option value="{{ type.id }}" selected>{{ type.project_name }}</option>
+                                            {% else %}
+                                                <option value="{{ type.id }}">{{ type.project_name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <input type="text" id="info_errror" autocomplete="off"
+                                           placeholder="对不起，还未添加项目，请先添加项目" class="layui-input" disabled>
+                                {% endif %}
+                            </div>
+                            <label class="layui-form-label">所属版本</label>
+                            <div class="layui-input-inline">
+                                <select lay-verify="required" id="pro_ver" disabled>
+                                    <option value="{{ data_info.version.id }}">{{ data_info.version.type }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">迭代描述</label>
+                            <div class="layui-input-block" style="width: 500px">
+                                <input type="text" value="{{ data_info.description }}" id="it_desc" autocomplete="off"
+                                       class="layui-input" disabled>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 创建迭代页，任务信息展示 -->
+        <div class="layui-col-md12" id="job_info">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-elem-quote">
+                        <p>任务信息</p>
+                    </div>
+                    <form class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">任务数量</label>
+                            <div class="layui-input-inline">
+                                <input type="text" id="job_num" placeholder="暂未添加" autocomplete="off"
+                                       class="layui-input" disabled value="{{ jobs|length }}">
+                            </div>
+                        </div>
+                        {% if jobs %}
+                            <div class="layui-collapse" id="job_list">
+                                {% for job in jobs %}
+                                    <div class="layui-colla-item">
+                                        <h2 class="layui-colla-title">任务ID：{{ job.id }} {{ job.job_name }}</h2>
+                                        <div class="layui-colla-content layui-show">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">请求域名</label>
+                                                <div class="layui-input-block" style="width: 500px">
+                                                    <input type="text" value="{{ job.domain_path }}" id="it_name"
+                                                           autocomplete="off"
+                                                           class="layui-input" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">当前签名</label>
+                                                <div class="layui-input-block" style="width: 500px">
+                                                    {% if job.autograph_config %}
+                                                        <input type="text" value="{{ job.autograph_config }}"
+                                                               id="it_name" autocomplete="off" class="layui-input"
+                                                               disabled>
+                                                    {% else %}
+                                                        <input type="text" value="无" id="it_name"
+                                                               autocomplete="off" class="layui-input" disabled>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">请求header</label>
+                                                <div class="layui-input-block" style="width: 500px">
+                                                    {% autoescape off %}
+                                                        {% job_header_to_table job.header_data %}
+                                                    {% endautoescape %}
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">全局变量</label>
+                                                <div class="layui-input-block" style="width: 500px">
+                                                    {% autoescape off %}
+                                                        {% job_header_to_table job.global_list %}
+                                                    {% endautoescape %}
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">任务描述</label>
+                                                <div class="layui-input-block" style="width: 500px">
+                                                    {% if job.autograph_config %}
+                                                        <input type="text" value="{{ job.description }}" id="it_name"
+                                                               autocomplete="off" class="layui-input" disabled>
+                                                    {% else %}
+                                                        <input type="text" value="无" id="it_name"
+                                                               autocomplete="off" class="layui-input" disabled>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 创建迭代页，功能按钮 -->
+        <div class="layui-col-md12" id="func_btn">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <button type="button" class="layui-btn layui-btn-sky layui-btn-sm layui-btn-radius"
+                            data-method="info">
+                        迭代执行
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 创建迭代页，用例展示弹层 -->
+        <div id="show_cases" style="display: none">
+            <form class="layui-form" style="margin-top: 20px">
+                <div class="layui-collapse" id="case_list">
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+
+        var job_num = 0;
+
+        layui.use(['layer', 'table', 'form', 'element'], function () {
+
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form, element = layui.element;
+            //触发事件
+            var active = {
+                info: function () {
+                    layer.open({
+                        title: '温馨提示'
+                        , content: '确定是否执行'
+                        , btn: ['是']
+                        , yes: function (index) {
+                            layer.close(index);
+                            $.ajax({
+                                url: '{% url "JobCenter:ExeIterations" %}',
+                                data: JSON.stringify({it_id: $("#it_id").val()}),
+                                //cache: false,
+                                //async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                },
+                                error: function (result) {
+                                },
+                            })
+                        }
+                    });
+                    //layer.msg("正在开发中，敬请期待……")
+                }
+            };
+
+            $('#func_btn .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            //监听项目，获取版本列表
+            form.on('select(job_pro)', function (data) {
+                var load_index = layer.load();
+                var pro_id = data.value;
+                //console.log(pro_id); //复选框value值，也可以通过data.elem.value得到
+                var re_data = {
+                    pro_id: pro_id,
+                    abandon_flag: 1,
+                };
+
+                $.ajax({
+                    url: '{% url "BaseCenter:ProjectVersionApi" %}',
+                    data: {
+                        search_data: JSON.stringify(re_data)
+                    },
+                    success: function (result) {
+                        console.log(result);
+                        if (result.code == 200) {
+                            var info = result.results;
+                            //console.log(info);
+
+                            var strs = '';
+
+                            for (let i = 0; i < info.length; i++) {
+                                strs += '<option value = "' + info[i].id + '">' + info[i].type + '</option>';
+                            }
+                            $("#pro_ver").empty();
+                            $("#pro_ver").html(strs);
+                        }
+                        form.render('select');
+                        layer.close(load_index);
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON,
+                            btn: ['知道了……'],
+                            yes: function () {
+                                window.location.reload();
+                            }
+                        });
+                    }
+                    ,
+                })
+            });
+        });
+
+        function get_cases(id) {
+            $.ajax({
+                url: '{% url "JobCenter:SubJobDataInfoApi" %}',
+                data: JSON.stringify({data_id: id}),
+                cache: false,
+                async: false,
+                type: "POST",
+                dataType: "json",
+                success: function (result) {
+                    //console.log(result);
+                    if (result.code == 200) {
+
+                        var html_data = '';
+
+                        var data = result.data;
+
+                        //console.log(data);
+
+                        for (var i = 0; i < data.length; i++) {
+
+                            html_data += '<div class="layui-colla-item">';
+                            html_data += '<h2 class="layui-colla-title">用例ID：' + data[i].id + ' ' + data[i].case_name + '</h2>';
+                            html_data += '<div class="layui-colla-content layui-show">';
+
+                            html_data += '<div class="layui-form-item">';
+                            html_data += '<label class="layui-form-label">用例类型</label>';
+                            html_data += '<div class="layui-input-block">';
+                            html_data += '<input type="text" autocomplete="off" class="layui-input" value="' + data[i].case_type + '">';
+                            html_data += '</div>';
+                            html_data += '</div>';
+
+                            html_data += '<div class="layui-form-item">';
+                            html_data += '<label class="layui-form-label">请求域名</label>';
+                            html_data += '<div class="layui-input-block">';
+                            html_data += '<input type="text" autocomplete="off" placeholder="如不需要单独请求，则不需要填写……" class="layui-input" value="' + data[i].domain_path + '">';
+                            html_data += '</div>';
+                            html_data += '</div>';
+
+                            var exe_data = eval("(" + data[i].exe_data + ")");
+
+                            for (var step = 0; step < exe_data.length; step++) {
+
+                                //console.log(exe_data[step]);
+
+                                html_data += '<hr class="layui-bg-green">';
+
+                                html_data += '<div class="layui-form-item">';
+                                html_data += '<label class="layui-form-label">执行参数</label>';
+                                html_data += '<div class="layui-input-block">';
+
+                                var exe_table = 'exe_table' + step;
+
+                                html_data += '<table class="layui-table" lay-filter="' + exe_table + '"><thead>';
+                                html_data += '<tr>';
+                                html_data += '<th lay-data="{field:\'field_key\'}">字段名称</th>';
+                                html_data += '<th lay-data="{field:\'field_value\'}">字段值</th>';
+                                html_data += '</tr> ';
+                                html_data += '</thead>';
+                                html_data += '<tbody>';
+
+                                var snap_data = eval("(" + exe_data[step].data + ")");
+
+                                console.log(snap_data);
+
+                                console.log(snap_data.exe_params);
+
+                                //var e_data = eval("(" + exe_data[step].data + ")");
+                                //var e_data = eval("(" + snap_data.exe_params + ")");
+                                var e_data = snap_data.exe_params;
+
+                                console.log(typeof e_data);
+
+                                $.each(e_data, function (key) {
+                                    console.log(key); //获取键值
+                                    console.log(e_data[key]); //获取对应的value
+                                    html_data += '<tr>';
+                                    html_data += '<td>';
+                                    html_data += key;
+
+                                    html_data += '</td> ';
+                                    html_data += '<td>';
+                                    html_data += e_data[key];
+
+                                    html_data += '</td> ';
+                                    html_data += '</tr> ';
+                                });
+
+                                html_data += '</tbody>';
+                                html_data += '</table>';
+
+                                html_data += '</div>';
+                                html_data += '</div>';
+
+                                html_data += '<div class="layui-form-item">';
+                                html_data += '<label class="layui-form-label">断言参数</label>';
+                                html_data += '<div class="layui-input-block">';
+
+                                var result_table = 'result_table' + step;
+
+                                html_data += '<table class="layui-table" lay-filter="' + result_table + '"><thead>';
+                                html_data += '<tr>';
+                                html_data += '<th lay-data="{field:\'field_key\'}">字段名称</th>';
+                                html_data += '<th lay-data="{field:\'field_value\'}">字段值</th>';
+                                html_data += '</tr> ';
+                                html_data += '</thead>';
+                                html_data += '<tbody>';
+
+                                console.log(snap_data.result);
+
+                                //var r_data = eval("(" + exe_data[step].result + ")");
+                                //var r_data = eval("(" + snap_data.result + ")");
+                                var r_data = snap_data.result;
+                                console.log(typeof r_data);
+
+                                $.each(r_data, function (key) {
+                                    //console.log(key); //获取键值
+                                    //console.log(data[key]); //获取对应的value
+                                    html_data += '<tr>';
+                                    html_data += '<td>';
+                                    html_data += key;
+
+                                    html_data += '</td> ';
+                                    html_data += '<td>';
+                                    html_data += r_data[key];
+
+                                    html_data += '</td> ';
+                                    html_data += '</tr> ';
+                                });
+
+                                html_data += '</tbody>';
+                                html_data += '</table>';
+
+                                html_data += '</div>';
+                                html_data += '</div>';
+
+                                html_data += '<div class="layui-form-item">';
+                                html_data += '<label class="layui-form-label">储存参数</label>';
+                                html_data += '<div class="layui-input-block">';
+                                html_data += '<input type="text" autocomplete="off" class="layui-input" value="' + snap_data.save_list + '">';
+                                html_data += '</div>';
+                                html_data += '</div>';
+
+                                html_data += '<div class="layui-form-item">';
+                                html_data += '<div class="layui-input-block">';
+                                html_data += '<div class="layui-form-mid layui-word-aux">';
+                                html_data += '请输入该用例步骤执行后需要储存的参数列表，多参数用;分隔开，若储存时，需要更改参数名，请用:更改后的参数名。例如：a:b;c';
+                                html_data += '</div>';
+                                html_data += '</div>';
+                                html_data += '</div>';
+                            }
+
+                            html_data += '</div>';
+                            html_data += '</div>';
+                        }
+
+                        $("#case_list").empty();
+                        $("#case_list").append(html_data);
+
+                        //element.render('lay-filter');
+                    }
+                    //form.render('select');
+
+                },
+                error: function (result) {
+                    layer.open({
+                        title: '更新结果'
+                        , content: result.responseJSON,
+                        btn: ['知道了……'],
+                        yes: function () {
+                            window.location.reload();
+                        }
+                    });
+                }
+                ,
+            });
+
+            layer.open({
+                type: 1,
+                title: "测试用例列表",
+                shadeClose: false,
+                btn: ['关闭'],
+                shade: 0,
+                area: ['70%', '80%'],
+                content: $("#show_cases"),
+                yes: function (index) {
+                    layer.close(index)
+                }
+            })
+        }
+
+    </script>
+    <script type="application/javascript">
+        $(function () {
+            $("#case_list").on("click", ".layui-colla-title", function (event) {
+                var next = $(this).parent().children(".layui-colla-content");
+                var icon = $(this).children("i");
+                var class_info = next.attr('class');
+                var info = $(event.target.nextElementSibling);
+                if (class_info == "layui-colla-content layui-show") {
+                    icon.html('');
+                    info.removeClass('layui-show');
+                } else {
+                    icon.html('');
+                    info.addClass('layui-show');
+                }
+            })
+        });
+    </script>
+{% endblock %}

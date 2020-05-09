@@ -1,0 +1,35 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">研发文档</a>
+                      <a href="{% url 'BaseCenter:WikiDocsIndex' %}">文档管理</a>
+                      <a><cite>新建文档</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <div class="layui-card" style="margin-top: 10px">
+                <div class="layui-card-header">
+                    <div class="layui-elem-quote">
+                        <p>文档信息</p>
+                    </div>
+                </div>
+                <div class="layui-card-body" style="margin-top: 20px">
+                    <form class="layui-form" method="post" action="{% url 'BaseCenter:WikiDocs' %}">
+                        {% csrf_token %}
+                        {{ form.media }}
+                        {{ form.as_p }}
+                        <p><input class="layui-btn layui-btn-normal layui-btn-sm" type="submit" value="创建文档"></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}{% endblock %}

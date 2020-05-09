@@ -1,0 +1,30 @@
+<div class="layui-side layui-bg-black">
+    <div class="layui-side-scroll">
+        <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+        <ul class="layui-nav layui-nav-tree">
+            {% for item in permission_menu_dict.values %}
+                {% if item.children %}
+                    {# 如果菜单中有二级菜单，那么则渲染为二级菜单 #}
+                    <li data-name="" data-jump="" class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="#">
+                            <i class="layui-icon {{ item.icon }}"></i>
+                            <cite style="margin-left: 20px">{{ item.menu_title }}</cite></a></a>
+                        <dl class="layui-nav-child">
+                            {% for foo in item.children %}
+                                <dd><a href="{{ foo.url }}"><cite style="margin-left: 40px">{{ foo.title }}</cite></a></dd>
+                            {% endfor %}
+                        </dl>
+                    </li>
+                {% else %}
+                    {# 如果菜单中没有二级菜单，那么则渲染为一级菜单 #}
+                    <li data-name="" data-jump="" class="layui-nav-item">
+                        <a href="{{ item.url }}" lay-tips="{{ item.title }}" lay-direction="2">
+                            <i class="layui-icon {{ item.icon }}"></i>
+                            <cite style="margin-left: 20px">{{ item.title }}</cite></a>
+                        {#                        <a href="{{ item.url }}">{{ item.title }}</a>#}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>

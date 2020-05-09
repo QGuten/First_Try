@@ -1,0 +1,43 @@
+{% load static %}
+<div class="layui-header">
+    <div class="layui-logo">
+        <img src="{% static '/images/logoa.png' %}" alt="layui" width="140px">
+    </div>
+    <!-- 头部区域（可配合layui已有的水平导航） -->
+    <ul class="layui-nav layui-layout-left">
+        {#        <li class="layui-nav-item"><a href="">控制台</a></li>#}
+        {#        <li class="layui-nav-item"><a href="">看板</a></li>#}
+        <li class="layui-nav-item layadmin-flexible" lay-unselect="">
+            <a href="javascript:;" layadmin-event="flexible" title="侧边伸缩">
+                <i class="layui-icon layui-icon-spread-left" id="LAY_app_flexible"></i>
+            </a>
+        </li>
+    </ul>
+    <ul class="layui-nav layui-layout-right">
+{#        <li class="layui-nav-item">#}
+{#            <a href="{% url 'BaseCenter:WikiDocsIndex' %}">研发文档</a>#}
+{#        </li>#}
+        <li class="layui-nav-item">
+            <a href="#">
+                {{ username }}
+            </a>
+            <dl class="layui-nav-child">
+                <dd><a href=""></a></dd>
+                <dd><a href="{% url 'UserCenter:UserInfo' %}">个人资料</a></dd>
+                {% if if_admin %}
+                    <dd><a href="{% url 'UserCenter:UserIndex' %}">用户管理</a></dd>
+                    <dd><a href="{% url 'UserCenter:JurisdictionList' %}">菜单管理</a></dd>
+                    <dd><a href="{% url 'UserCenter:RoleList' %}">角色管理</a></dd>
+                    {#                    <dd><a href="{% url 'UserCenter:JurisdictionIndex' %}">权限管理</a></dd>#}
+                {% endif %}
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+            {% if if_login %}
+                <a href="javascript:void(0)" onclick='signOut("{% url 'UserCenter:SingOut' %}")'>退出</a>
+            {% else %}
+                <a href="{% url 'login' %}">登录</a>
+            {% endif %}
+        </li>
+    </ul>
+</div>

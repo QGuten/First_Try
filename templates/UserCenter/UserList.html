@@ -1,0 +1,571 @@
+{% extends 'layout/base.html' %}
+{% block css %}{% endblock %}
+{% block context %}
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <span class="layui-breadcrumb">
+                      <a href="">用户管理</a>
+                      <a><cite>用户列表</cite></a>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                <div class="layui-card">
+                    <div class="layui-card-body" id="search_info">
+                        <form class="layui-form">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <select name="case_search_type" class="layui-form-select"
+                                            lay-filter="case_search_type"
+                                            id="case_search_type">
+                                        <option value="">请选择搜索条件</option>
+                                        <option value="id">用户ID</option>
+                                        <option value="username__contains">用户名</option>
+                                        <option value="mobile_no__contains">手机号</option>
+                                        <option value="email__contains">邮箱</option>
+                                        <option value="role__title__contains">角色</option>
+                                        <option value="pro__project_name__contains">项目</option>
+                                    </select>
+                                </div>
+                                <div class="layui-inline">
+                                    <input class="layui-input" name="search_data" id="search_data"
+                                           autocomplete="off">
+                                </div>
+                                <div class="layui-inline">
+                                    <button class="layui-btn" type="button" data-type="reload"
+                                            data-method="search_case">搜索
+                                    </button>
+                                </div>
+
+                            </div>
+                        </form>
+                        <table class="layui-hide" id="test" lay-filter="test"></table>
+                        <script type="text/html" id="toolbarDemo">
+                            <div class="layui-btn-container">
+                                <div class="layui-inline" lay-event="add"><i class="layui-icon layui-icon-add-1"
+                                                                             onclick='window.location.href="{% url 'UserCenter:AddUserIndex' %}"'></i>
+                                </div>
+                            </div>
+                        </script>
+
+                        <script type="text/html" id="barDemo">
+                            <a class="layui-btn layui-btn-xs layui-btn-normal" lay-event="show_info">详细信息</a>
+                            <a class="layui-btn layui-btn-xs layui-btn-warm" lay-event="set_pwd">重制密码</a>
+                        </script>
+
+                        <div id="user_info" style="display: none;">
+                            <div style="margin-top: 20px">
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">登录用户名</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="username" id="username" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">姓氏</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="last_name" id="last_name" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">名字</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="first_name" id="first_name" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">手机号码</label>
+                                        <div class="layui-input-inline">
+                                            <input type="tel" name="mobile_no" id="mobile_no"
+                                                   lay-verify="required|phone"
+                                                   autocomplete="off"
+                                                   class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">邮箱</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="email" id="email" lay-verify="email"
+                                                   autocomplete="off"
+                                                   class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">所属部门</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="department" id="department" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">选择角色</label>
+                                    {% if RoleList %}
+                                        <div class="layui-input-block">
+                                            {% for role in RoleList %}
+                                                <input type="checkbox" name="role" title="{{ role.title }}"
+                                                       value="{{ role.title }}" placeholder="{{ role.id }}">
+                                                <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                                    <span>{{ role.title }}</span><i
+                                                        class="layui-icon layui-icon-ok"></i></div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">选择项目</label>
+                                    {% if pro_list %}
+                                        <div class="layui-input-block">
+                                            {% for pro in pro_list %}
+                                                <input type="checkbox" name="pros" title="{{ pro.project_name }}"
+                                                       value="{{ pro.project_name }}" placeholder="{{ pro.id }}">
+                                                <div class="layui-unselect layui-form-checkbox layui-form-checked">
+                                                    <span>{{ pro.project_name }}</span><i
+                                                        class="layui-icon layui-icon-ok"></i></div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="setPassword" style="display: none;">
+                            <form class="layui-form">
+                                <div class="layui-form-item" style="margin-top: 20px">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">新密码</label>
+                                        <div class="layui-input-inline">
+                                            <input type="password" name="password_1" id="password_1"
+                                                   class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">重复密码</label>
+                                        <div class="layui-input-inline">
+                                            <input type="password" name="password_2" id="password_2"
+                                                   class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item" style="margin-right: 30px">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">密码显示</label>
+                                        <div class="layui-input-inline">
+                                            <input type="checkbox" name="password_show" lay-skin="switch"
+                                                   lay-text="开启|关闭"
+                                                   lay-filter="password_show">
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        layui.use(['layer', 'table', 'form', 'element'], function () {
+            var $ = layui.jquery, layer = layui.layer, table = layui.table, form = layui.form, element = layui.element;
+
+            var active = {
+                search_case: function () {
+                    var search_data = $("#search_data").val();
+                    var search_type = $("#case_search_type").find("option:selected").attr("value");
+                    if (search_data == "" && search_type != "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    } else if (search_data != "" && search_type == "") {
+                        layer.open({
+                            title: '警告！'
+                            , content: '请检查您的搜索条件……'
+                        });
+                        return
+                    }
+                    var re_data = {};
+                    re_data[search_type] = search_data;
+                    table.reload('test', {
+                        url: '/usercenter/api/users/',
+                        page: {
+                            curr: 1
+                        }
+                        , where: {
+                            search_data: JSON.stringify(re_data)
+                        }
+                    })
+                },
+            };
+
+            $('#search_info .layui-btn').on('click', function () {
+                var othis = $(this), method = othis.data('method');
+                active[method] ? active[method].call(this, othis) : '';
+            });
+
+            var table_cache;
+
+            table.render({
+                elem: '#test'
+                , url: '/usercenter/api/users/'
+                , toolbar: '#toolbarDemo'
+                , title: '用户信息'
+                , page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                    layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'] //自定义分页布局
+                    , curr: 1 //设定初始在第 5 页
+                    , groups: 5//只显示 1 个连续页码
+                }
+                , id: 'test'
+                , cols: [[
+                    {field: 'id', title: 'ID', width: 80}
+                    , {field: 'username', title: '用户名', width: 120}
+                    , {field: 'name', title: '姓名', width: 120,}
+                    //, {
+                    //    field: 'email', title: '邮箱', width: 300, templet: function (res) {
+                    //        return '<em>' + res.email + '</em>'
+                    //    }
+                    //}
+                    //, {field: 'mobile_no', title: '手机号码', width: 120,}
+                    , {field: 'department', title: '所在部门', width: 120,}
+                    , {field: 'role', title: '用户角色'}
+                    , {field: 'pro', title: '用户项目'}
+                    , {
+                        field: 'is_active', title: '状态', width: 100, templet: function (res) {
+                            if (res.is_active) {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable" checked>'
+                            } else {
+                                return '<input type="checkbox" lay-skin="switch" lay-text="启用|禁用" lay-filter="Enable">'
+                            }
+                        }
+                    }
+                    , {title: '操作', toolbar: '#barDemo', width: 150}
+                ]]
+                , response: {
+                    statusName: 'code' //规定数据状态的字段名称，默认：code
+                    , statusCode: 200 //规定成功的状态码，默认：0
+                    , countName: 'count' //规定数据总数的字段名称，默认：count
+                    , dataName: 'results' //规定数据列表的字段名称，默认：data
+                    , msgName: 'errorMsg'
+                },
+                done: function (res) {
+                    //如果是异步请求数据方式，res即为你接口返回的信息。
+                    //如果是直接赋值的方式，res即为：{data: [], count: 99} data为当前页数据、count为数据总长度
+                    table_cache = res.results;
+                }
+            });
+
+            form.on('switch(Enable)', function (data) {
+                var elem = data.othis.parents('tr');
+                var dataindex = elem.attr("data-index");
+                var user_id;
+                var abandon_flag;
+                console.log(dataindex);
+                if (elem.find("input:checkbox").is(':checked')) {
+                    abandon_flag = 1;
+                    console.log('启用');
+                } else {
+                    abandon_flag = 0;
+                    console.log('禁用');
+                }
+                $.each(table_cache, function (index, value) {
+                    if (value.LAY_TABLE_INDEX == dataindex) {
+                        user_id = value.id
+                    }
+                });
+                var load_index = layer.load();
+                $.ajax({
+                    url: '{% url "UserCenter:UsersApi" %}',
+                    data: JSON.stringify({
+                        user_id: user_id,
+                        abandon_flag: abandon_flag,
+                    }),
+                    cache: false,
+                    async: false,
+                    type: "PUT",
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.code == 200) {
+                            layer.close(load_index);
+                            layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                //do something
+                                layer.close(index);
+                            });
+                        } else {
+                            layer.close(load_index);
+                            layer.open({
+                                title: '更新结果'
+                                , content: result.responseJSON
+                            });
+                        }
+                    },
+                    error: function (result) {
+                        layer.close(load_index);
+                        layer.open({
+                            title: '更新结果'
+                            , content: result.responseJSON
+                        });
+                    },
+                })
+            });
+
+            //监听工具条删除按钮GetUserInfo
+            table.on('tool(test)', function (obj) {
+                if (obj.event === 'show_info') {
+                    //layer.open({
+                    //    title: '温馨提示'
+                    //    , content: '功能正在紧锣密鼓开发中……'
+                    //});
+                    //console.log(obj.data.id);
+                    var load_index = layer.load();
+                    var re_data = {
+                        id: obj.data.id,
+                    };
+
+                    //var load_index = layer.load({content: '正在获取用户信息...',});
+                    $.ajax({
+                        url: '{% url "UserCenter:UsersApi" %}',
+                        data: {
+                            search_data: JSON.stringify(re_data)
+                        },
+                        success: function (result) {
+                            if (result.code == 200) {
+                                layer.close(load_index);
+                                $("#username").attr('value', result.results[0].username);
+                                $("#last_name").attr('value', result.results[0].last_name);
+                                $("#first_name").attr('value', result.results[0].first_name);
+                                $("#mobile_no").attr('value', result.results[0].mobile_no);
+                                $("#email").attr('value', result.results[0].email);
+                                $("#department").attr('value', result.results[0].department);
+                                //console.log(result.data.roles);
+                                if (result.results[0].role) {
+                                    $.each(result.results[0].role, function (p_index, p_value) {
+                                        //console.log(p_value);
+                                        $.each($('input:checkbox[name="role"]'), function (index, value) {
+                                            //console.log(value.value);
+                                            if (value.value == p_value) {
+                                                //console.log('两个变量一致');
+                                                $(value).prop('checked', true);
+                                                form.render('checkbox');
+                                                return false;
+                                            }
+                                        });
+                                    })
+                                } else {
+                                    $.each($('input[type=checkbox][name="role"]:checked'), function (c_index, c_value) {
+                                        $(c_value).attr("checked", false);
+                                        form.render('checkbox');
+                                    })
+                                }
+                                //console.log(result.results[0].role);
+                                if (result.results[0].pro) {
+                                    $.each(result.results[0].pro, function (p_index, p_value) {
+                                        //console.log('1' + p_value);
+                                        $.each($('input:checkbox[name="pros"]'), function (index, value) {
+                                            //console.log('2' + value.value);
+                                            if (value.value == p_value) {
+                                                //console.log('两个变量一致');
+                                                $(value).prop('checked', true);
+                                                form.render('checkbox');
+                                                return false;
+                                            }
+                                        });
+                                    })
+                                } else {
+                                    $.each($('input[type=checkbox][name="pros"]:checked'), function (c_index, c_value) {
+                                        $(c_value).attr("checked", false);
+                                        form.render('checkbox');
+                                    })
+                                }
+                                layer.open({
+                                    type: 1,
+                                    title: "用户信息",
+                                    shadeClose: false,
+                                    closeBtn: true,
+                                    shade: 0,
+                                    area: ['700px', '500px'],
+                                    content: $("#user_info"),
+                                    btn: ['更新用户信息', '取消'],
+                                    yes: function (index) {
+                                        layer.close(index);
+                                        var load_index = layer.load();
+                                        var username = $("#username").val();
+                                        var last_name = $("#last_name").val();
+                                        var first_name = $("#first_name").val();
+                                        var mobile_no = $("#mobile_no").val();
+                                        var email = $("#email").val();
+                                        var department = $("#department").val();
+                                        //获取选择角色
+                                        var all_roles = $("input:checkbox[name='role']:checked");
+                                        var role_list = [];
+                                        if (all_roles.length == 0) {
+                                            alert("请至少勾选一个用户角色");
+                                            return;
+                                        } else {
+                                            all_roles.each(function () {
+                                                role_list.push($(this).attr('placeholder'))
+                                            });
+                                        }
+                                        //获取选择项目
+                                        var all_pros = $("input:checkbox[name='pros']:checked");
+                                        var pro_list = [];
+                                        if (all_pros.length == 0) {
+                                            alert("请至少勾选一个用户权限");
+                                            return;
+                                        } else {
+                                            all_pros.each(function () {
+                                                pro_list.push($(this).attr('placeholder'))
+                                            });
+                                        }
+                                        var data_info = {
+                                            username: username,
+                                            last_name: last_name,
+                                            first_name: first_name,
+                                            mobile_no: mobile_no,
+                                            email: email,
+                                            department: department,
+                                            roles: role_list,
+                                            pros: pro_list,
+                                            user_id: obj.data.id
+                                        };
+                                        $.ajax({
+                                            url: '{% url "UserCenter:UsersApi" %}',
+                                            data: JSON.stringify(data_info),
+                                            cache: false,
+                                            async: false,
+                                            type: "PUT",
+                                            dataType: "json",
+                                            success: function (result) {
+                                                if (result.code == 200) {
+                                                    layer.close(load_index);
+                                                    layer.confirm('更新成功', {icon: 1, title: '更新结果'}, function (index) {
+                                                        //do something
+                                                        layer.close(index);
+                                                        window.location.reload();
+                                                    });
+                                                } else {
+                                                    layer.close(load_index);
+                                                    layer.confirm(result.responseJSON, {
+                                                        icon: 1,
+                                                        title: '获取结果'
+                                                    }, function (index) {
+                                                        //do something
+                                                    });
+                                                }
+                                            },
+                                            error: function (result) {
+                                                layer.close(load_index);
+                                                layer.confirm(result.responseJSON, {
+                                                    icon: 1,
+                                                    title: '获取结果'
+                                                }, function (index) {
+                                                    //do something
+                                                });
+                                            },
+                                        })
+                                    },
+                                    btn2: function (index) {
+                                        $("#username").attr('value', '');
+                                        $("#last_name").attr('value', '');
+                                        $("#first_name").attr('value', '');
+                                        $("#mobile_no").attr('value', '');
+                                        $("#email").attr('value', '');
+                                        $("#department").attr('value', '');
+                                        $.each($('input[type=checkbox][name="role"]:checked'), function (c_index, c_value) {
+                                            $(c_value).attr("checked", false);
+                                            form.render('checkbox');
+                                        });
+                                        layer.close(load_index);
+                                        layer.close(index);
+                                    }
+                                })
+                            }
+                        },
+                        error: function () {
+                            layer.close(load_index);
+                            layer.confirm('获取用户信息失败', {icon: 1, title: '获取结果'}, function (index) {
+                                //do something
+                                layer.close(load_index);
+                                layer.close(index);
+                            });
+                        },
+                    });
+                } else if (obj.event === 'set_pwd') {
+                    layer.open({
+                        type: 1,
+                        title: "重置密码",
+                        shadeClose: false,
+                        closeBtn: false,
+                        btn: ['确认', '取消'],
+                        shade: 0,
+                        area: ['500px', '300px'],
+                        content: $("#setPassword"),
+                        yes: function (index) {
+                            var load_index = layer.load();
+                            var password_1 = $("#password_1").val();
+                            var password_2 = $("#password_2").val();
+                            var data = {
+                                user_id: obj.data.id,
+                                password_1: password_1,
+                                password_2: password_2
+                            };
+                            $.ajax({
+                                url: '{% url "UserCenter:SetPassword" %}',
+                                //data: data,
+                                data: JSON.stringify(data),
+                                cache: false,
+                                async: false,
+                                type: "POST",
+                                dataType: "json",
+                                success: function (result) {
+                                    layer.close(load_index);
+                                    if (result.code == 200) {
+                                        layer.confirm('密码重置成功', {icon: 1, title: '重置结果'}, function (index) {
+                                            //do something
+                                            layer.close(index);
+                                        });
+                                    }
+                                },
+                                error: function (result) {
+                                    layer.close(index);
+                                    layer.confirm(result.responseJSON, {
+                                        icon: 1,
+                                        title: '重置结果'
+                                    }, function (index) {
+                                        //do something
+                                        layer.close(index);
+                                    });
+                                },
+                            })
+                        },
+                    })
+                }
+            });
+
+            form.on('switch(password_show)', function (data) {
+                if (data.elem.checked) {
+                    $("#password_1").attr('type', 'text');
+                    $("#password_2").attr('type', 'text');
+                } else {
+                    $("#password_1").attr('type', 'password');
+                    $("#password_2").attr('type', 'password');
+                }
+            });
+        });
+    </script>
+{% endblock %}
